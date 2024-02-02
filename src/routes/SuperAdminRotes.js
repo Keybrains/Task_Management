@@ -13,10 +13,10 @@ const DashboardDefault = Loadable(lazy(() => import('superadmin/pages/dashboard/
 const SamplePage = Loadable(lazy(() => import('pages/extra-pages/SamplePage')));
 
 // render - utilities
-const Typography = Loadable(lazy(() => import('pages/components-overview/Typography')));
-const Color = Loadable(lazy(() => import('pages/components-overview/Color')));
-const Shadow = Loadable(lazy(() => import('pages/components-overview/Shadow')));
-const AntIcons = Loadable(lazy(() => import('pages/components-overview/AntIcons')));
+const Typography = Loadable(lazy(() => import('superadmin/pages/components-overview/Typography')));
+const Color = Loadable(lazy(() => import('superadmin/pages/components-overview/Color')));
+const Shadow = Loadable(lazy(() => import('superadmin/pages/components-overview/Shadow')));
+const AntIcons = Loadable(lazy(() => import('superadmin/pages/components-overview/AntIcons')));
 
 // ==============================|| MAIN ROUTING ||============================== //
 

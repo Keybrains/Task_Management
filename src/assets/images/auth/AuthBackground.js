@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
 
 // Import the image
-import backgroundImage from 'assets/images/imgpsh_fullsize_anim.png'; // Update the path accordingly
+import backgroundImage from 'assets/images/imgpsh_fullsize_anim-1.png'; // Update the path accordingly
 
 // ==============================|| AUTH BLUR BACK IMG ||============================== //
 

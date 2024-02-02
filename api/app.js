@@ -16,6 +16,8 @@ const SuperAdminSignupRouter = require('./routes/SuperAdminSignup');
 const AddAdminRouter = require('./routes/AddAdmin');
 const AddProjectRouter = require('./routes/AddProject');
 const AddUserRouter = require('./routes/AddUser');
+const AddReportingFormRouter = require('./routes/AddReportingForm');
+const AddTaskRouter = require('./routes/AddTask');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -34,6 +36,8 @@ app.use('/api/superadminsignup', SuperAdminSignupRouter);
 app.use('/api/addadmins', AddAdminRouter);
 app.use('/api/addprojects', AddProjectRouter);
 app.use('/api/addusers', AddUserRouter);
+app.use('/api/addreportingfrom', AddReportingFormRouter);
+app.use('/api/addtasks', AddTaskRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

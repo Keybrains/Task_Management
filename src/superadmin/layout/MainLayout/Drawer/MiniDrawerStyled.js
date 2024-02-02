@@ -13,7 +13,8 @@ const openedMixin = (theme) => ({
     duration: theme.transitions.duration.enteringScreen
   }),
   overflowX: 'hidden',
-  boxShadow: 'none'
+  boxShadow: 'none',
+  backgroundColor: 'rgba(255, 165, 0, 0.05)'
 });
 
 const closedMixin = (theme) => ({

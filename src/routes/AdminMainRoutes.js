@@ -6,6 +6,8 @@ import MainLayout from 'layout/MainLayout';
 import RequireAuth from 'RequireAuth';
 import AddProject from 'project/AddProject';
 import AddUser from 'team/AddUser';
+import AddForm from 'form/AddForm';
+import Reports from 'report/Reports';
 
 // render - dashboard
 const DashboardDefault = Loadable(lazy(() => import('pages/dashboard')));
@@ -21,7 +23,7 @@ const AntIcons = Loadable(lazy(() => import('pages/components-overview/AntIcons'
 
 // ==============================|| MAIN ROUTING ||============================== //
 
-const MainRoutes = {
+const AdminMainRoutes = {
   path: '/admin',
   element: (
     <RequireAuth>
@@ -69,8 +71,16 @@ const MainRoutes = {
     {
       path: 'adduser',
       element: <AddUser />
+    },
+    {
+      path: 'addform',
+      element: <AddForm />
+    },
+    {
+      path: 'reports',
+      element: <Reports />
     }
   ]
 };
 
-export default MainRoutes;
+export default AdminMainRoutes;

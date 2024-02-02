@@ -8,9 +8,9 @@ const UserSchema = new mongoose.Schema({
   admin_id: {
     type: String
   },
-  project_id: {
+  project_ids: [{
     type: String
-  },
+  }],
   projectName: {
     type: String
   },

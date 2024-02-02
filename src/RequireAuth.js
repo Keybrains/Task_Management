@@ -14,7 +14,7 @@ const RequireAuth = ({ children }) => {
     } else if (location.pathname.startsWith('/superadmin')) {
       return <Navigate to="/superadminlogin" />;
     } else {
-      return <Navigate to="/login" />;
+      return <Navigate to="/userlogin" />;
     }
   }
 

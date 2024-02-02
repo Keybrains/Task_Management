@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import axiosInstance from 'superadmin/config/AxiosInstanceSuperAdmin';
 import { Flag, ShortText, Description, CalendarToday } from '@mui/icons-material';
-
 import {
   Box,
   Button,
@@ -18,8 +17,21 @@ import {
   CardContent
 } from '@mui/material';
 import 'react-toastify/dist/ReactToastify.css';
-
+import Loader from 'components/Loader';
+const fullScreenLoaderStyle = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  width: '100vw',
+  height: '100vh',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  zIndex: 1500
+};
 const AddProject = () => {
+  const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const decodedToken = localStorage.getItem('decodedToken');
   const parsedToken = JSON.parse(decodedToken);
@@ -60,8 +72,10 @@ const AddProject = () => {
       try {
         const response = await axiosInstance.get(`/addprojects/projects/${loggedInUserId}`);
         setProjects(response.data.data);
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching projects:', error);
+        setLoading(false);
         // toast.error('Error fetching projects');
       }
     };
@@ -100,166 +114,185 @@ const AddProject = () => {
   };
 
   return (
-    <Grid container spacing={3} style={{ paddingTop: '15px' }}>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
-      <Grid item xs={12}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h4" gutterBottom>
-            Add New Project
-          </Typography>
-          <Button variant="contained" color="primary" onClick={handleOpenDialog} style={{ backgroundColor: 'rgba(71, 121, 126, 1)' }}>
-            Add Project
-          </Button>
-          <Dialog open={openDialog} onClose={handleCloseDialog}>
-            <DialogTitle style={{ color: 'rgba(71, 121, 126, 1)', fontSize: '25px' }}>Add New Project</DialogTitle>
-            <DialogContent>
-              <form style={{ paddingTop: '10px' }}>
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Project Name"
-                      variant="outlined"
-                      name="projectName"
-                      value={formData.projectName}
-                      onChange={handleChange}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Short Name"
-                      variant="outlined"
-                      name="projectShortName"
-                      value={formData.projectShortName}
-                      onChange={handleChange}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      select
-                      fullWidth
-                      label="Priority"
-                      variant="outlined"
-                      name="priority"
-                      value={formData.priority}
-                      onChange={handleChange}
-                    >
-                      <MenuItem value="high">High</MenuItem>
-                      <MenuItem value="medium">Medium</MenuItem>
-                      <MenuItem value="low">Low</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Description"
-                      variant="outlined"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleChange}
-                      multiline
-                      rows={4}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      type="date"
-                      label="Start Date"
-                      variant="outlined"
-                      name="startDate"
-                      value={formData.startDate}
-                      onChange={handleChange}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      type="date"
-                      label="End Date"
-                      variant="outlined"
-                      name="endDate"
-                      value={formData.endDate}
-                      onChange={handleChange}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                </Grid>
-              </form>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseDialog} color="secondary">
-                Cancel
+    <>
+      {loading && (
+        <div style={fullScreenLoaderStyle}>
+          <Loader />
+        </div>
+      )}
+      <div style={loading ? { display: 'none' } : {}}>
+        <Grid container spacing={3} style={{ paddingTop: '15px' }}>
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
+          <Grid item xs={12}>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="h4" gutterBottom>
+                Add New Project
+              </Typography>
+              <Button variant="contained" color="primary" onClick={handleOpenDialog} style={{ backgroundColor: 'rgba(71, 121, 126, 1)' }}>
+                Add Project
               </Button>
-              <Button onClick={handleSave} color="primary" variant="contained" style={{ backgroundColor: 'rgba(71, 121, 126, 1)' }}>
-                Save
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </Box>
-      </Grid>
-      <Grid item xs={12}>
-        <Typography variant="h5" gutterBottom style={{ marginLeft: '10px' }}>
-          All Projects
-        </Typography>
-        <Grid container spacing={2}>
-          {projects.map((project, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Card style={getProjectCardStyle(project.priority)}>
-                <CardContent>
-                  {/* Project Name */}
-                  <Typography variant="h6" gutterBottom style={{ fontWeight: 'bold', color: '#4a90e2', letterSpacing: '0.5px' }}>
-                    {project.projectName}
+              <Dialog open={openDialog} onClose={handleCloseDialog}>
+                <DialogTitle style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'rgba(255,255,255)', fontSize: '20px' }}>
+                  Add New Project
+                </DialogTitle>
+                <DialogContent>
+                  <form style={{ paddingTop: '10px' }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Project Name"
+                          variant="outlined"
+                          name="projectName"
+                          value={formData.projectName}
+                          onChange={handleChange}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Short Name"
+                          variant="outlined"
+                          name="projectShortName"
+                          value={formData.projectShortName}
+                          onChange={handleChange}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          select
+                          fullWidth
+                          label="Priority"
+                          variant="outlined"
+                          name="priority"
+                          value={formData.priority}
+                          onChange={handleChange}
+                        >
+                          <MenuItem value="high">High</MenuItem>
+                          <MenuItem value="medium">Medium</MenuItem>
+                          <MenuItem value="low">Low</MenuItem>
+                        </TextField>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Description"
+                          variant="outlined"
+                          name="description"
+                          value={formData.description}
+                          onChange={handleChange}
+                          multiline
+                          rows={4}
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          type="date"
+                          label="Start Date"
+                          variant="outlined"
+                          name="startDate"
+                          value={formData.startDate}
+                          onChange={handleChange}
+                          InputLabelProps={{ shrink: true }}
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          type="date"
+                          label="End Date"
+                          variant="outlined"
+                          name="endDate"
+                          value={formData.endDate}
+                          onChange={handleChange}
+                          InputLabelProps={{ shrink: true }}
+                        />
+                      </Grid>
+                    </Grid>
+                  </form>
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={handleCloseDialog} color="secondary">
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSave} color="primary" variant="contained" style={{ backgroundColor: 'rgba(71, 121, 126, 1)' }}>
+                    Save
+                  </Button>
+                </DialogActions>
+              </Dialog>
+            </Box>
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="h5" gutterBottom style={{ marginLeft: '10px' }}>
+              All Projects
+            </Typography>
+            <Grid container spacing={2}>
+              {projects.length > 0 ? (
+                projects.map((project, index) => (
+                  <Grid item xs={12} sm={6} md={4} key={index}>
+                    <Card style={getProjectCardStyle(project.priority)}>
+                      <CardContent>
+                        {/* Project Name */}
+                        <Typography variant="h6" gutterBottom style={{ fontWeight: 'bold', color: '#4a90e2', letterSpacing: '0.5px' }}>
+                          {project.projectName}
+                        </Typography>
+
+                        {/* Project Short Name */}
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                          <ShortText style={{ marginRight: '4px' }} />
+                          <Typography variant="body1">{project.projectShortName}</Typography>
+                        </div>
+
+                        {/* Project Priority */}
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                          <Flag style={{ marginRight: '4px', color: getColorForPriority(project.priority) }} />
+                          <Typography variant="body1" style={{ color: getColorForPriority(project.priority) }}>
+                            {project.priority.charAt(0).toUpperCase() + project.priority.slice(1)}
+                          </Typography>
+                        </div>
+
+                        {/* Project Dates */}
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                          <CalendarToday style={{ marginRight: '4px' }} />
+                          <Typography variant="body1">
+                            {formatDate(project.startDate)} - {formatDate(project.endDate)}
+                          </Typography>
+                        </div>
+
+                        {/* Project Description */}
+                        <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '8px' }}>
+                          <Description style={{ marginRight: '4px', marginTop: '4px' }} />
+                          <Typography variant="body2" color="textSecondary" style={{ marginRight: '4px', marginTop: '10px' }}>
+                            {project.description}
+                          </Typography>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))
+              ) : (
+                <Grid item xs={12}>
+                  <Typography variant="body1" style={{ textAlign: 'center' }}>
+                    No projects available.
                   </Typography>
-
-                  {/* Project Short Name */}
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-                    <ShortText style={{ marginRight: '4px' }} />
-                    <Typography variant="body1">{project.projectShortName}</Typography>
-                  </div>
-
-                  {/* Project Priority */}
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-                    <Flag style={{ marginRight: '4px', color: getColorForPriority(project.priority) }} />
-                    <Typography variant="body1" style={{ color: getColorForPriority(project.priority) }}>
-                      {project.priority.charAt(0).toUpperCase() + project.priority.slice(1)}
-                    </Typography>
-                  </div>
-
-                  {/* Project Dates */}
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-                    <CalendarToday style={{ marginRight: '4px' }} />
-                    <Typography variant="body1">
-                      {formatDate(project.startDate)} - {formatDate(project.endDate)}
-                    </Typography>
-                  </div>
-
-                  {/* Project Description */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '8px' }}>
-                    <Description style={{ marginRight: '4px', marginTop: '4px' }} />
-                    <Typography variant="body2" color="textSecondary" style={{ marginRight: '4px', marginTop: '10px' }}>
-                      {project.description}
-                    </Typography>
-                  </div>
-                </CardContent>
-              </Card>
+                </Grid>
+              )}
             </Grid>
-          ))}
+          </Grid>
         </Grid>
-      </Grid>
-    </Grid>
+      </div>
+    </>
   );
 };
 

@@ -41,6 +41,11 @@ TabPanel.propTypes = {
 // ==============================|| HEADER CONTENT - PROFILE ||============================== //
 
 const Profile = () => {
+  const decodedToken = localStorage.getItem('decodedToken');
+  const parsedToken = JSON.parse(decodedToken);
+  const loggedInUserFirstname = parsedToken.userId?.firstname;
+  const loggedInUserLastname = parsedToken.userId?.lastname;
+
   const theme = useTheme();
   const navigate = useNavigate();
   const handleLogout = async () => {
@@ -88,9 +93,11 @@ const Profile = () => {
         aria-haspopup="true"
         onClick={handleToggle}
       >
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ p: 0.5 }}>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ p: 0.5 }}>
           <Avatar alt="profile user" src={avatar1} sx={{ width: 32, height: 32 }} />
-          <Typography variant="subtitle1">Admin</Typography>
+          <Typography variant="subtitle1">
+            {loggedInUserFirstname} {loggedInUserLastname}
+          </Typography>
         </Stack>
       </ButtonBase>
       <Popper
@@ -133,7 +140,9 @@ const Profile = () => {
                           <Stack direction="row" spacing={1.25} alignItems="center">
                             <Avatar alt="profile user" src={avatar1} sx={{ width: 32, height: 32 }} />
                             <Stack>
-                              <Typography variant="h6">Admin</Typography>
+                              <Typography variant="h6">
+                                {loggedInUserFirstname} {loggedInUserLastname}
+                              </Typography>
                             </Stack>
                           </Stack>
                         </Grid>

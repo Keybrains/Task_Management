@@ -173,6 +173,40 @@ router.delete('/deleteadmin/:userId', async (req, res) => {
   }
 });
 
+router.put('/editadmin/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const updates = req.body; // Fields to update
 
+  try {
+    // If a new password is provided, hash it before saving
+    if (updates.password) {
+      updates.password = await hashPassword(updates.password);
+    }
+
+    // Update admin data
+    const updatedAdmin = await AddAdmin.findOneAndUpdate({ user_id: userId }, updates, { new: true, runValidators: true }).select(
+      '-password'
+    ); // Do not return the password
+
+    if (!updatedAdmin) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admin not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Admin data updated successfully',
+      admin: updatedAdmin
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+});
 
 module.exports = router;

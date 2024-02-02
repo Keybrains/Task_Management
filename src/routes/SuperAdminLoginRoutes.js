@@ -2,7 +2,7 @@ import { lazy } from 'react';
 
 // project import
 import Loadable from 'components/Loadable';
-import MinimalLayout from 'layout/MinimalLayout';
+import MinimalLayout from 'superadmin/layout/MinimalLayout/MinimalLayout';
 
 // render - login
 const SuperAuthLogin = Loadable(lazy(() => import('superadmin/pages/authentication/SuperAdminLogin')));
@@ -10,7 +10,7 @@ const SuperAuthRegister = Loadable(lazy(() => import('superadmin/pages/authentic
 
 // ==============================|| AUTH ROUTING ||============================== //
 
-const LoginRoutes = {
+const SuperAdminLoginRoutes = {
   path: '/',
   element: <MinimalLayout />,
   children: [
@@ -25,4 +25,4 @@ const LoginRoutes = {
   ]
 };
 
-export default LoginRoutes;
+export default SuperAdminLoginRoutes;

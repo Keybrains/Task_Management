@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const moment = require('moment');
 const AddUser = require('../models/AddUser');
+const AddProject = require('../models/Addproject');
 const { hashPassword, hashCompare, createToken } = require('../utils/authhelper');
 
 router.post('/adduser', async (req, res) => {
@@ -36,7 +37,7 @@ router.post('/adduser', async (req, res) => {
     const createTime = (req.body['createAt'] = moment().format('YYYY-MM-DD HH:mm:ss'));
     const updateTime = (req.body['updateAt'] = moment().format('YYYY-MM-DD HH:mm:ss'));
     const hashedPassword = await hashPassword(req.body.password);
-
+    const { project_ids } = req.body;
     const newUser = new AddUser({
       firstname: req.body.firstname,
       lastname: req.body.lastname,
@@ -44,7 +45,7 @@ router.post('/adduser', async (req, res) => {
       email: req.body.email,
       phonenumber: req.body.phonenumber,
       projectName: req.body.projectName,
-      project_id: req.body.project_id,
+      project_ids: project_ids || [],
       admin_id: req.body.admin_id,
       password: hashedPassword,
       createAt: createTime,
@@ -56,7 +57,7 @@ router.post('/adduser', async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Admin SignUp Successful'
+      message: 'User SignUp Successful'
     });
   } catch (error) {
     console.error(error);
@@ -108,14 +109,14 @@ router.get('/getuserbyadmin/:adminId', async (req, res) => {
   }
 });
 
-router.post('/adminlogin', async (req, res) => {
+router.post('/userlogin', async (req, res) => {
   try {
-    const user = await AddAdmin.findOne({ email: req.body.email });
+    const user = await AddUser.findOne({ email: req.body.email });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'Admin does not exist'
+        message: 'User does not exist'
       });
     }
 
@@ -203,6 +204,73 @@ router.delete('/deleteuser/:userId', async (req, res) => {
       success: true,
       message: 'User deleted successfully',
       deletedUserId: userId
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+});
+
+router.put('/edituser/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const updates = req.body; // Fields to update
+
+  try {
+    // If a new password is provided, hash it before saving
+    if (updates.password) {
+      updates.password = await hashPassword(updates.password);
+    }
+
+    // Update admin data
+    const updatedUser = await AddUser.findOneAndUpdate({ user_id: userId }, updates, { new: true, runValidators: true }).select(
+      '-password'
+    ); // Do not return the password
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'User data updated successfully',
+      admin: updatedUser
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+});
+
+router.get('/getprojects/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find the user by their user_id
+    const user = await AddUser.findOne({ user_id: userId });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Retrieve projects based on the user's project_ids
+    const projects = await AddProject.find({
+      project_id: { $in: user.project_ids }
+    });
+
+    res.json({
+      success: true,
+      projects
     });
   } catch (error) {
     console.error(error);

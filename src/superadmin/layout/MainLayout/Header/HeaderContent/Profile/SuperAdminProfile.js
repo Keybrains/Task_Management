@@ -89,7 +89,7 @@ const SuperAdminProfile = () => {
         aria-haspopup="true"
         onClick={handleToggle}
       >
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ p: 0.5 }}>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ p: 0.5 }}>
           <Avatar alt="profile user" src={avatar1} sx={{ width: 42, height: 42 }} />
           <Typography variant="subtitle1">Super Admin</Typography>
         </Stack>

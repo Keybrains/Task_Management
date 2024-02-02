@@ -12,7 +12,7 @@ import AuthBackground from 'assets/images/auth/AuthBackground';
 
 // ==============================|| AUTHENTICATION - WRAPPER ||============================== //
 
-const AuthWrapper = ({ children }) => (
+const SuperAdminAuthWrapper = ({ children }) => (
   <Box sx={{ minHeight: '100vh' }}>
     <AuthBackground />
     <Grid
@@ -37,12 +37,15 @@ const AuthWrapper = ({ children }) => (
           </Grid>
         </Grid>
       </Grid>
+      <Grid item xs={12} sx={{ m: 3, mt: 1 }}>
+        {/* <AuthFooter /> */}
+      </Grid>
     </Grid>
   </Box>
 );
 
-AuthWrapper.propTypes = {
+SuperAdminAuthWrapper.propTypes = {
   children: PropTypes.node
 };
 
-export default AuthWrapper;
+export default SuperAdminAuthWrapper;

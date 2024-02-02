@@ -2,7 +2,7 @@
   "name": "Project Management System",
   "version": "1.1.2",
   "private": true,
-  "homepage": "https://www.app.keybrainstech.com/adminlogin",
+  "homepage": "https://www.app.keybrainstech.com/userlogin",
   "dependencies": {
     "@ant-design/colors": "^6.0.0",
     "@ant-design/icons": "^4.7.0",
@@ -12,6 +12,7 @@
     "@mui/icons-material": "^5.15.6",
     "@mui/lab": "^5.0.0-alpha.100",
     "@mui/material": "^5.10.6",
+    "@mui/x-date-pickers": "^6.19.2",
     "@reduxjs/toolkit": "^1.8.5",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
@@ -48,6 +49,7 @@
     "simplebar-react": "^2.4.1",
     "typescript": "4.8.3",
     "web-vitals": "^3.0.2",
+    "xlsx": "^0.18.5",
     "yup": "^0.32.11"
   },
   "scripts": {

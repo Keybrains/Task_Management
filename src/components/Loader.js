@@ -18,7 +18,16 @@ const LoaderWrapper = styled('div')(({ theme }) => ({
 
 const Loader = () => (
   <LoaderWrapper>
-    <LinearProgress color="primary" />
+    <LinearProgress
+      sx={{
+        // Customize the color of the progress bar itself
+        '& .MuiLinearProgress-bar': {
+          backgroundColor: 'rgba(71, 121, 126)' // Custom color for the progress bar
+        },
+        // Customize the background color of the progress bar (the part that's not yet filled)
+        backgroundColor: 'rgb(255,255,255)' // Example: a light gray background
+      }}
+    />
   </LoaderWrapper>
 );
 

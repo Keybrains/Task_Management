@@ -3,6 +3,7 @@ const router = express.Router();
 const moment = require('moment');
 const AddProject = require('../models/Addproject');
 
+// post
 router.post('/addproject', async (req, res) => {
   try {
     const timestamp = Date.now();

@@ -27,20 +27,20 @@ router.post('/superadminsignup', async (req, res) => {
       password: hashedPassword,
       createAt: createTime,
       updateAt: updateTime,
-      user_id: userUniqueId,
+      user_id: userUniqueId
     });
 
     await newUser.save();
 
     res.json({
       success: true,
-      message: 'Admin SignUp Successful',
+      message: 'Admin SignUp Successful'
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Internal Server Error',
+      message: 'Internal Server Error'
     });
   }
 });
@@ -52,7 +52,7 @@ router.post('/superadminlogin', async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'Admin does not exist',
+        message: 'Admin does not exist'
       });
     }
 
@@ -61,7 +61,7 @@ router.post('/superadminlogin', async (req, res) => {
     if (!compare) {
       return res.status(422).json({
         success: false,
-        message: 'Wrong password',
+        message: 'Wrong password'
       });
     }
 
@@ -71,13 +71,13 @@ router.post('/superadminlogin', async (req, res) => {
       success: true,
       data: user,
       expiresAt: expiresIn,
-      token,
+      token
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: error,
+      message: error
     });
   }
 });
@@ -87,43 +87,39 @@ router.put('/superadminchangepassword/:user_id', async (req, res) => {
     const { user_id } = req.params;
     const { oldPassword, newPassword } = req.body;
 
-    // Find the user by user_id
     const user = await SuperAdminSignup.findOne({ user_id });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'Admin not found',
+        message: 'Admin not found'
       });
     }
 
-    // Check if the old password is correct
     const compare = await hashCompare(oldPassword, user.password);
 
     if (!compare) {
       return res.status(422).json({
         success: false,
-        message: 'Incorrect old password',
+        message: 'Incorrect old password'
       });
     }
 
-    // Hash and update the new password
     const hashedNewPassword = await hashPassword(newPassword);
     user.password = hashedNewPassword;
     user.updateAt = moment().format('YYYY-MM-DD HH:mm:ss');
 
-    // Save the updated user
     await user.save();
 
     res.json({
       success: true,
-      message: 'Password updated successfully',
+      message: 'Password updated successfully'
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Internal Server Error',
+      message: 'Internal Server Error'
     });
   }
 });

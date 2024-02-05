@@ -7,7 +7,6 @@ router.post('/addform', async (req, res) => {
   try {
     const formData = req.body;
 
-    // Generate unique form_id
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substr(5, 15);
     const randomNumber = Math.floor(Math.random() * Math.pow(10, 10))
@@ -16,7 +15,6 @@ router.post('/addform', async (req, res) => {
     const uniqueId = `${timestamp}${randomString}${randomNumber}`;
     formData.form_id = uniqueId;
 
-    // Set createAt and updateAt timestamps using Date types
     formData.createAt = moment().format('YYYY-MM-DD HH:mm:ss');
     formData.updateAt = moment().format('YYYY-MM-DD HH:mm:ss');
 
@@ -51,15 +49,24 @@ router.get('/getforms/:admin_id', async (req, res) => {
   }
 });
 
+router.get('/getprojectforms/:project_id', async (req, res) => {
+  try {
+    const { project_id } = req.params;
+    const forms = await ReportingForm.find({ project_id });
+    res.status(200).json({ forms });
+  } catch (error) {
+    console.error('Error fetching forms:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
 router.delete('/deleteform/:form_id', async (req, res) => {
   try {
     const { form_id } = req.params;
 
-    // Find the form by form_id and delete it
     const deletedForm = await ReportingForm.findOneAndDelete({ form_id });
 
     if (!deletedForm) {
-      // If the form with the given form_id is not found
       return res.status(404).json({ message: 'Form not found' });
     }
 
@@ -67,6 +74,36 @@ router.delete('/deleteform/:form_id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting form:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.get('/:form_id', async (req, res) => {
+  try {
+    const { form_id } = req.params;
+    const form = await ReportingForm.findOne({ form_id });
+    res.status(200).json(form);
+  } catch (error) {
+    console.error('Error fetching form details:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+router.put('/:form_id', async (req, res) => {
+  try {
+    const { form_id } = req.params;
+    const updatedForm = req.body;
+    updatedForm.updateAt = new Date();
+
+    const result = await ReportingForm.findOneAndUpdate({ form_id }, updatedForm, { new: true });
+
+    if (!result) {
+      return res.status(404).json({ message: 'Form not found' });
+    }
+
+    res.status(200).json({ message: 'Form updated successfully', form: result });
+  } catch (error) {
+    console.error('Error updating form:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 

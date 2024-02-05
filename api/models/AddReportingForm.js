@@ -27,6 +27,10 @@ const ReportingFormSchema = new mongoose.Schema({
         type: String,
         enum: ['text', 'textarea', 'number', 'checkbox', 'radio', 'date'],
         required: true
+      },
+      options: {
+        type: [String],
+        default: []
       }
     }
   ],
@@ -38,4 +42,4 @@ const ReportingFormSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model('AddReportingForm', ReportingFormSchema);
+module.exports = mongoose.model('AllReportingForm', ReportingFormSchema);

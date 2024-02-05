@@ -39,4 +39,4 @@ const AdminSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model('AddAdmins', AdminSchema);
+module.exports = mongoose.model('AllAdmin', AdminSchema);

@@ -39,14 +39,14 @@ const pages = {
       icon: icons.FileAddOutlined
       // target: true
     },
-    // {
-    //   id: 'Report',
-    //   title: 'All Report',
-    //   type: 'item',
-    //   url: '/admin/reports',
-    //   icon: icons.DatabaseOutlined
-    //   // target: true
-    // }
+    {
+      id: 'Report',
+      title: 'All Report',
+      type: 'item',
+      url: '/admin/reports',
+      icon: icons.DatabaseOutlined
+      // target: true
+    }
   ]
 };
 

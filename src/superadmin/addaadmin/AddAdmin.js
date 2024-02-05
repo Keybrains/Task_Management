@@ -118,7 +118,6 @@ const AddAdmin = () => {
   //change status
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState(null);
-  console.log('selectedAdmin', selectedAdmin);
 
   const promptToggleStatus = (admin) => {
     setSelectedAdmin(admin);
@@ -196,9 +195,7 @@ const AddAdmin = () => {
 
   const handleEditSave = async () => {
     try {
-      const response = await axiosInstance.put(`/addadmins/editadmin/${selectedAdmin?.user_id}`, editFormData);
-      console.log('response', selectedAdmin?.user_id);
-      console.log('response', response);
+      await axiosInstance.put(`/addadmins/editadmin/${selectedAdmin?.user_id}`, editFormData);
       toast.success('Admin updated successfully');
       fetchAdmins(); // Refresh the admin list
       setEditDialogOpen(false);
@@ -354,31 +351,39 @@ const AddAdmin = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {(rowsPerPage > 0 ? filteredAdmins.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : admins).map((admin) => (
-                    <TableRow key={admin._id}>
-                      <TableCell>{admin.firstname}</TableCell>
-                      <TableCell>{admin.lastname}</TableCell>
-                      <TableCell>{admin.email}</TableCell>
-                      <TableCell>{admin.phonenumber}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="contained"
-                          color={admin.status === 'activate' ? 'success' : 'error'}
-                          onClick={() => promptToggleStatus(admin)}
-                        >
-                          {admin.status === 'activate' ? 'Active' : 'Inactive'}
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        <IconButton onClick={() => promptDeleteAdmin(admin)}>
-                          <DeleteIcon />
-                        </IconButton>
-                        <IconButton onClick={() => promptEditAdmin(admin)}>
-                          <EditIcon />
-                        </IconButton>
+                  {filteredAdmins.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center">
+                        No admins found.
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredAdmins.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((admin) => (
+                      <TableRow key={admin._id}>
+                        <TableCell>{admin.firstname}</TableCell>
+                        <TableCell>{admin.lastname}</TableCell>
+                        <TableCell>{admin.email}</TableCell>
+                        <TableCell>{admin.phonenumber}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="contained"
+                            color={admin.status === 'activate' ? 'success' : 'error'}
+                            onClick={() => promptToggleStatus(admin)}
+                          >
+                            {admin.status === 'activate' ? 'Active' : 'Inactive'}
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <IconButton onClick={() => promptDeleteAdmin(admin)}>
+                            <DeleteIcon />
+                          </IconButton>
+                          <IconButton onClick={() => promptEditAdmin(admin)}>
+                            <EditIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>

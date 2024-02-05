@@ -48,4 +48,4 @@ const UserSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model('AddUsers', UserSchema);
+module.exports = mongoose.model('AllUser', UserSchema);

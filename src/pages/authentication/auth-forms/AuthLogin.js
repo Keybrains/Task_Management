@@ -111,9 +111,6 @@ const AuthLogin = () => {
             // Redirect to the dashboard
             navigate('/admin/dashboard/default');
 
-            // Handle successful login response here
-            console.log('Login successful:', response.data);
-
             setStatus({ success: true });
             setSubmitting(false);
           } catch (err) {

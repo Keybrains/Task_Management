@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
-import axiosInstance from 'superadmin/config/AxiosInstanceSuperAdmin';
+import axiosInstance from 'config/AxiosInstanceAdmin';
 import { Flag, ShortText, Description, CalendarToday } from '@mui/icons-material';
 import {
   Box,
@@ -59,6 +59,7 @@ const AddProject = () => {
       await axiosInstance.post('/addprojects/addproject', formData);
       toast.success('Project added successfully');
       handleCloseDialog();
+      fetchProjects();
     } catch (error) {
       console.error('Error adding project:', error);
       toast.error('Error adding project');
@@ -67,19 +68,18 @@ const AddProject = () => {
 
   const [projects, setProjects] = useState([]);
 
+  const fetchProjects = async () => {
+    try {
+      const response = await axiosInstance.get(`/addprojects/projects/${loggedInUserId}`);
+      setProjects(response.data.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      setLoading(false);
+      // toast.error('Error fetching projects');
+    }
+  };
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const response = await axiosInstance.get(`/addprojects/projects/${loggedInUserId}`);
-        setProjects(response.data.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching projects:', error);
-        setLoading(false);
-        // toast.error('Error fetching projects');
-      }
-    };
-
     fetchProjects();
   }, [loggedInUserId]); // Include loggedInUserId in the dependency array
 

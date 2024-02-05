@@ -3,36 +3,36 @@ const mongoose = require('mongoose');
 const UserSchema = new mongoose.Schema({
   user_id: {
     type: String,
-    unique: true,
+    unique: true
   },
   firstname: {
-    type: String,
+    type: String
   },
   lastname: {
-    type: String,
+    type: String
   },
   companyname: {
-    type: String,
+    type: String
   },
   email: {
     type: String,
-    lowercase: true,
+    lowercase: true
   },
   phonenumber: {
-    type: Number,
+    type: Number
   },
   username: {
-    type: String,
+    type: String
   },
   password: {
-    type: String,
+    type: String
   },
   createAt: {
-    type: String,
+    type: String
   },
   updateAt: {
-    type: String,
-  },
+    type: String
+  }
 });
 
 module.exports = mongoose.model('SuperAdminSignup', UserSchema);

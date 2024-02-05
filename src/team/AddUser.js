@@ -4,7 +4,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import axiosInstance from 'superadmin/config/AxiosInstanceSuperAdmin';
+import axiosInstance from 'config/AxiosInstanceAdmin';
 import {
   Box,
   Button,
@@ -55,7 +55,7 @@ const AddUser = () => {
     try {
       const response = await axiosInstance.get(`/addusers/getuserbyadmin/${loggedInUserId}`);
       setusers(response.data.users);
-      console.log('response.data.users', response.data.users);
+
       setLoading(false);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -111,7 +111,7 @@ const AddUser = () => {
     phonenumber: '',
     password: '',
     admin_id: loggedInUserId,
-    project_ids: [] // Initialize project_ids as an empty array
+    project_ids: []
   });
 
   const handleSave = async () => {
@@ -240,11 +240,10 @@ const AddUser = () => {
 
   const handleEditSave = async () => {
     try {
-      const response = await axiosInstance.put(`/addusers/edituser/${selectedUser?.user_id}`, {
+      await axiosInstance.put(`/addusers/edituser/${selectedUser?.user_id}`, {
         ...editFormData,
         project_ids: editFormData.project_ids || [] // Ensure project_ids is an array
       });
-      console.log('response', response)
       toast.success('User updated successfully');
       fetchUsers(); // Refresh the admin list
       setEditDialogOpen(false);

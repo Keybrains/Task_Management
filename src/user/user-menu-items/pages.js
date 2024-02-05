@@ -1,11 +1,12 @@
-import { LoginOutlined, ProfileOutlined, UserOutlined, AppstoreOutlined } from '@ant-design/icons';
+import { LoginOutlined, ProfileOutlined, UserOutlined, AppstoreOutlined, FileTextOutlined } from '@ant-design/icons';
 
 // icons
 const icons = {
   LoginOutlined,
   ProfileOutlined,
   UserOutlined,
-  ProjectIcon: AppstoreOutlined // Assuming AppstoreOutlined as the Project icon
+  ReportIcon: FileTextOutlined, // Use the chosen icon for "Report"
+  ProjectIcon: AppstoreOutlined
 };
 
 // ==============================|| MENU ITEMS - EXTRA PAGES ||============================== //
@@ -20,14 +21,14 @@ const pages = {
       title: 'All Project',
       type: 'item',
       url: '/user/allproject',
-      icon: icons.ProjectIcon // Use the chosen icon for "All Project"
+      icon: icons.ProjectIcon
     },
     {
       id: 'addtask',
-      title: 'Add Task',
+      title: 'Add Report',
       type: 'item',
       url: '/user/addtask',
-      icon: icons.UserOutlined
+      icon: icons.ReportIcon
     }
   ]
 };

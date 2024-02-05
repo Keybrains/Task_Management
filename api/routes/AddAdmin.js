@@ -8,7 +8,6 @@ router.post('/addadmin', async (req, res) => {
   try {
     const { email, phonenumber } = req.body;
 
-    // Check for existing user with the same email or phone number
     const existingUser = await AddAdmin.findOne({
       $or: [{ email: email }, { phonenumber: phonenumber }]
     });
@@ -67,7 +66,7 @@ router.post('/addadmin', async (req, res) => {
 
 router.get('/getadmins', async (req, res) => {
   try {
-    const admins = await AddAdmin.find({}, '-password'); // Exclude the password field
+    const admins = await AddAdmin.find({}, '-password');
     res.json({
       success: true,
       admins
@@ -123,7 +122,6 @@ router.put('/togglestatus/:userId', async (req, res) => {
     const { userId } = req.params;
     const { status } = req.body;
 
-    // Validate status
     if (!['activate', 'deactivate'].includes(status)) {
       return res.status(400).json({
         success: false,
@@ -175,18 +173,16 @@ router.delete('/deleteadmin/:userId', async (req, res) => {
 
 router.put('/editadmin/:userId', async (req, res) => {
   const { userId } = req.params;
-  const updates = req.body; // Fields to update
+  const updates = req.body;
 
   try {
-    // If a new password is provided, hash it before saving
     if (updates.password) {
       updates.password = await hashPassword(updates.password);
     }
 
-    // Update admin data
     const updatedAdmin = await AddAdmin.findOneAndUpdate({ user_id: userId }, updates, { new: true, runValidators: true }).select(
       '-password'
-    ); // Do not return the password
+    );
 
     if (!updatedAdmin) {
       return res.status(404).json({

@@ -35,7 +35,6 @@ import { useNavigate } from '../../../../../node_modules/react-router-dom/dist/i
 const SuperAdminAuthLogin = () => {
   const navigate = useNavigate();
   const [checked, setChecked] = React.useState(false);
-  console.log('axiosInstance', axiosInstance);
   const [showPassword, setShowPassword] = React.useState(false);
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
@@ -98,9 +97,6 @@ const SuperAdminAuthLogin = () => {
 
             // Redirect to the dashboard
             navigate('/superadmin/dashboard/default');
-
-            // Handle successful login response here
-            console.log('Login successful:', response.data);
 
             setStatus({ success: true });
             setSubmitting(false);

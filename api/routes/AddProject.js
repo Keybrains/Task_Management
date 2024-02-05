@@ -71,7 +71,6 @@ router.get('/projects/:adminId', async (req, res) => {
 router.get('/projects/names/:adminId', async (req, res) => {
   try {
     const adminId = req.params.adminId;
-    // Using projection to get both the projectName and project_id fields
     const projects = await AddProject.find({ admin_id: adminId }, 'projectName project_id');
 
     if (!projects || projects.length === 0) {

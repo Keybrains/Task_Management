@@ -6,10 +6,11 @@ const TaskSchema = new mongoose.Schema({
   userId: { type: String, ref: 'ReportingForm', required: true },
   adminId: { type: String, ref: 'ReportingForm', required: true },
   taskId: { type: String, ref: 'ReportingForm', required: true },
+  projectId: { type: String, ref: 'ReportingForm', required: true },
+  projectName: { type: String, ref: 'ReportingForm', required: true },
   formFields: {
     type: Object,
     required: true
-    // Add more properties as needed for each field
   },
   createAt: {
     type: String
@@ -17,9 +18,8 @@ const TaskSchema = new mongoose.Schema({
   updateAt: {
     type: String
   }
-  // Add any other fields you want to store for the task
 });
 
-const Task = mongoose.model('AddTask', TaskSchema);
+const Task = mongoose.model('AllTask', TaskSchema);
 
 module.exports = Task;

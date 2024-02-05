@@ -18,14 +18,19 @@ import {
   TableCell,
   Paper,
   IconButton,
-  TablePagination
+  TablePagination,
+  Checkbox,
+  Radio,
+  FormControlLabel
 } from '@mui/material';
 import { CloseOutlined } from '@mui/icons-material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import axiosInstance from 'superadmin/config/AxiosInstanceSuperAdmin';
+import EditIcon from '@mui/icons-material/Edit';
+import axiosInstance from 'config/AxiosInstanceAdmin';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Loader from 'components/Loader';
+import { useNavigate } from '../../node_modules/react-router-dom/dist/index';
 const fullScreenLoaderStyle = {
   position: 'fixed',
   top: 0,
@@ -53,7 +58,11 @@ const AddForm = () => {
     fields: []
   });
 
-  const [newField, setNewField] = useState({ fieldName: '', fieldType: 'text' });
+  const [newField, setNewField] = useState({
+    fieldName: '',
+    fieldType: 'text',
+    options: [] // New property for radio and checkbox options
+  });
 
   const handleOpenDialog = () => setOpenDialog(true);
   const handleCloseDialog = () => setOpenDialog(false);
@@ -180,7 +189,6 @@ const AddForm = () => {
       try {
         const response = await axiosInstance.get(`/addprojects/projects/names/${loggedInUserId}`); // Adjust the URL as per your API.
         setProjects(response.data.data);
-        console.log('response.data.projects', response.data.data);
       } catch (error) {
         console.error('Error fetching projects:', error);
         toast.error('Error fetching projects');
@@ -189,6 +197,15 @@ const AddForm = () => {
 
     fetchProjects();
   }, []);
+
+  const navigate = useNavigate(); // Create the navigate function
+
+  // ... (existing code)
+
+  const handleEditForm = (formId) => {
+    // Use navigate to redirect to the edit form page, you need to define your route for editing
+    navigate(`/admin/editform/${formId}`);
+  };
 
   return (
     <>
@@ -292,9 +309,34 @@ const AddForm = () => {
                           <MenuItem value="text">Text</MenuItem>
                           {/* <MenuItem value="textarea">Textarea</MenuItem> */}
                           <MenuItem value="date">Date</MenuItem>
-                          {/* <MenuItem value="checkbox">Checkbox</MenuItem>
-                      <MenuItem value="radio">Radio</MenuItem> */}
+                          <MenuItem value="checkbox">Checkbox</MenuItem>
+                          <MenuItem value="radio">Radio</MenuItem>
                         </TextField>
+                        {newField.fieldType === 'radio' || newField.fieldType === 'checkbox' ? (
+                          <div>
+                            <TextField
+                              fullWidth
+                              label="Options(comma-seprated)"
+                              variant="outlined"
+                              name="options"
+                              value={newField.options ? newField.options.join(',') : ''}
+                              onChange={(e) => setNewField({ ...newField, options: e.target.value.split(',') })}
+                              style={{ marginTop: '15px' }}
+                            />
+                            <div style={{ marginTop: '10px' }}>
+                              {newField.fieldType === 'radio' && newField.options
+                                ? newField.options.map((option, index) => (
+                                    <FormControlLabel key={index} control={<Radio />} label={option} />
+                                  ))
+                                : newField.fieldType === 'checkbox' && newField.options
+                                ? newField.options.map((option, index) => (
+                                    <FormControlLabel key={index} control={<Checkbox />} label={option} />
+                                  ))
+                                : null}
+                            </div>
+                          </div>
+                        ) : null}
+
                         <Button onClick={handleAddField} style={{ marginTop: '20px', color: 'rgba(71, 121, 126, 1)' }}>
                           Add Field
                         </Button>
@@ -352,6 +394,10 @@ const AddForm = () => {
                           <TableCell>
                             <IconButton onClick={() => handleDeleteForm(form.form_id)}>
                               <DeleteIcon />
+                            </IconButton>
+                            <IconButton onClick={() => handleEditForm(form.form_id)}>
+                              {/* Use handleEditForm to navigate to the edit form page */}
+                              <EditIcon />
                             </IconButton>
                           </TableCell>
                         </TableRow>

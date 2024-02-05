@@ -9,7 +9,6 @@ router.post('/adduser', async (req, res) => {
   try {
     const { email, phonenumber } = req.body;
 
-    // Check for existing user with the same email or phone number
     const existingUser = await AddUser.findOne({
       $or: [{ email: email }, { phonenumber: phonenumber }]
     });
@@ -70,7 +69,7 @@ router.post('/adduser', async (req, res) => {
 
 router.get('/getusers', async (req, res) => {
   try {
-    const users = await AddUser.find({}, '-password'); // Exclude the password field
+    const users = await AddUser.find({}, '-password');
     res.json({
       success: true,
       users
@@ -87,8 +86,7 @@ router.get('/getusers', async (req, res) => {
 router.get('/getuserbyadmin/:adminId', async (req, res) => {
   try {
     const adminId = req.params.adminId;
-    const users = await AddUser.find({ admin_id: adminId }, '-password'); // Exclude the password field
-
+    const users = await AddUser.find({ admin_id: adminId }, '-password');
     if (users.length === 0) {
       return res.status(404).json({
         success: false,
@@ -151,14 +149,8 @@ router.put('/updateuser/:userId', async (req, res) => {
     const { userId } = req.params;
     const updateData = req.body;
 
-    // Find user by user_id and update
-    const user = await AddUser.findOneAndUpdate(
-      { user_id: userId },
-      { $set: updateData },
-      { new: true } // Return the updated document
-    );
+    const user = await AddUser.findOneAndUpdate({ user_id: userId }, { $set: updateData }, { new: true });
 
-    // If no user is found
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -166,7 +158,6 @@ router.put('/updateuser/:userId', async (req, res) => {
       });
     }
 
-    // Exclude password from the response
     const userResponse = { ...user._doc };
     delete userResponse.password;
 
@@ -184,15 +175,12 @@ router.put('/updateuser/:userId', async (req, res) => {
   }
 });
 
-// DELETE API to delete user by user_id
 router.delete('/deleteuser/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Find user by user_id and delete
     const deletedUser = await AddUser.findOneAndDelete({ user_id: userId });
 
-    // If no user is found
     if (!deletedUser) {
       return res.status(404).json({
         success: false,
@@ -216,18 +204,16 @@ router.delete('/deleteuser/:userId', async (req, res) => {
 
 router.put('/edituser/:userId', async (req, res) => {
   const { userId } = req.params;
-  const updates = req.body; // Fields to update
+  const updates = req.body;
 
   try {
-    // If a new password is provided, hash it before saving
     if (updates.password) {
       updates.password = await hashPassword(updates.password);
     }
 
-    // Update admin data
     const updatedUser = await AddUser.findOneAndUpdate({ user_id: userId }, updates, { new: true, runValidators: true }).select(
       '-password'
-    ); // Do not return the password
+    );
 
     if (!updatedUser) {
       return res.status(404).json({
@@ -254,7 +240,6 @@ router.get('/getprojects/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Find the user by their user_id
     const user = await AddUser.findOne({ user_id: userId });
     if (!user) {
       return res.status(404).json({
@@ -263,7 +248,6 @@ router.get('/getprojects/:userId', async (req, res) => {
       });
     }
 
-    // Retrieve projects based on the user's project_ids
     const projects = await AddProject.find({
       project_id: { $in: user.project_ids }
     });

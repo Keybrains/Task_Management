@@ -1,11 +1,11 @@
-import { Outlet } from 'react-router-dom';
+  import { Outlet } from 'react-router-dom';
 
-// ==============================|| MINIMAL LAYOUT ||============================== //
+  // ==============================|| MINIMAL LAYOUT ||============================== //
 
-const UserMinimalLayout = () => (
-  <>
-    <Outlet />
-  </>
-);
+  const UserMinimalLayout = () => (
+    <>
+      <Outlet />
+    </>
+  );
 
-export default UserMinimalLayout;
+  export default UserMinimalLayout;

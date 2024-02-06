@@ -49,6 +49,3 @@ UserAuthWrapper.propTypes = {
 };
 
 export default UserAuthWrapper;
-
-
-

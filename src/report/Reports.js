@@ -4,7 +4,6 @@ import {
   MenuItem,
   TextField,
   Grid,
-  Box,
   Typography,
   Table,
   TableBody,
@@ -15,6 +14,8 @@ import {
   Paper,
   TablePagination
 } from '@mui/material';
+import * as XLSX from 'xlsx';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import 'react-toastify/dist/ReactToastify.css';
 import Loader from 'user/components/Loader';
 
@@ -32,16 +33,31 @@ const fullScreenLoaderStyle = {
 };
 
 const Reports = () => {
+  //lodder
+  const [loading, setLoading] = useState(true);
+
   //get logged user data
   const decodedToken = localStorage.getItem('decodedToken');
   const parsedToken = JSON.parse(decodedToken);
-  // const loggedInAdminId = parsedToken.userId?.admin_id;
   const loggedInUserId = parsedToken.userId?.user_id;
 
-  //lodder
-  const [loading, setLoading] = useState(true);
-  const [projects, setProjects] = useState([]);
+  //get user
+  const [users, setUsers] = useState([]);
+  const fetchUsers = async () => {
+    try {
+      const response = await axiosInstance.get(`/addusers/getuserbyadmin/${loggedInUserId}`);
+      setUsers(response.data.users);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
 
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  //get project
+  const [projects, setProjects] = useState([]);
   const fetchProjects = async () => {
     try {
       const response = await axiosInstance.get(`/addprojects/projects/${loggedInUserId}`);
@@ -50,7 +66,6 @@ const Reports = () => {
     } catch (error) {
       console.error('Error fetching projects:', error);
       setLoading(false);
-      // toast.error('Error fetching projects');
     }
   };
 
@@ -58,8 +73,8 @@ const Reports = () => {
     fetchProjects();
   }, []);
 
+  //get forms
   const [forms, setForms] = useState([]);
-
   const fetchForms = async (projectId) => {
     try {
       const response = await axiosInstance.get(`/addreportingfrom/getprojectforms/${projectId}`);
@@ -69,23 +84,24 @@ const Reports = () => {
     }
   };
 
-  //for from all fields
-
   //fetch task
-
   const [tasks, setTasks] = useState([]);
   const [selectedTaskProject, setSelectedTaskProject] = useState(null);
   const [selectedTaskForm, setSelectedTaskForm] = useState(null);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
-  const fetchTasks = async (projectId, formId) => {
+  const fetchTasks = async (projectId, formId, userId) => {
     try {
       setLoading(true);
+      let endpoint = `/addtasks/adminstasks/${loggedInUserId}?`;
+      if (projectId) endpoint += `projectId=${projectId}&`;
+      if (formId) endpoint += `formId=${formId}&`;
+      if (userId) endpoint += `userId=${userId}`;
 
-      const response = await axiosInstance.get(`/addtasks/adminstasks/${loggedInUserId}?projectId=${projectId}&formId=${formId}`);
+      const response = await axiosInstance.get(endpoint);
 
       if (response.data && response.data.length > 0) {
-        const filteredTasks = response.data.filter((task) => task.projectId === projectId || task.formId === formId);
-        setTasks(filteredTasks);
+        setTasks(response.data);
       } else {
         setTasks([]);
       }
@@ -97,35 +113,21 @@ const Reports = () => {
   };
 
   useEffect(() => {
-    if (selectedTaskProject && selectedTaskForm) {
-      fetchTasks(selectedTaskProject, selectedTaskForm);
+    if (selectedTaskProject && selectedTaskForm && selectedUserId) {
+      fetchTasks(selectedTaskProject, selectedTaskForm, selectedUserId);
     }
-  }, [selectedTaskProject, selectedTaskForm]);
+  }, [selectedTaskProject, selectedTaskForm, selectedUserId]);
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const getUniqueFormFields = () => {
+  //get unique fields in all from filter tasks
+  const getUniqueFormFields = (filteredTasks) => {
     const uniqueFormFields = new Set();
-    tasks.forEach((task) => {
+    filteredTasks.forEach((task) => {
       Object.keys(task.formFields).forEach((key) => uniqueFormFields.add(key));
     });
     return Array.from(uniqueFormFields);
   };
-
-  const uniqueFormFields = getUniqueFormFields();
-  //searchbaar
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filterTasks = () => {
-    return tasks.filter((task) => {
-      const fullName = `${task.userFirstName} ${task.userLastName}`.toLowerCase();
-      return fullName.includes(searchQuery.toLowerCase());
-    });
-  };
-
-  const filteredTasks = filterTasks();
+  const filteredTasksByForm = tasks.filter((task) => task.formId === selectedTaskForm);
+  const uniqueFormFields = getUniqueFormFields(filteredTasksByForm);
 
   //pagination
   const [page, setPage] = useState(0);
@@ -140,6 +142,27 @@ const Reports = () => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+  const downloadExcel = (filteredTasksByForm, uniqueFormFields) => {
+    const wb = XLSX.utils.book_new();
+    const headers = ['User Name', ...uniqueFormFields];
+    const ws_data = [headers];
+    filteredTasksByForm.forEach((task) => {
+      const row = [
+        `${task.userFirstName} ${task.userLastName}`,
+        ...uniqueFormFields.map((field) =>
+          Array.isArray(task.formFields[field]) ? task.formFields[field].join(', ') : task.formFields[field] || 'N/A'
+        )
+      ];
+      ws_data.push(row);
+    });
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    const colWidths = headers.map((_, i) =>
+      Math.max(...ws_data.map((row) => (row[i] ? String(row[i]).length : 0)), String(headers[i]).length)
+    );
+    ws['!cols'] = colWidths.map((w) => ({ wch: w + 2 }));
+    XLSX.utils.book_append_sheet(wb, ws, 'Tasks');
+    XLSX.writeFile(wb, 'reports.xlsx');
+  };
 
   return (
     <>
@@ -149,23 +172,30 @@ const Reports = () => {
         </div>
       )}
       <div style={loading ? { display: 'none' } : {}}>
-        <Grid container spacing={3} style={{ paddingTop: '15px' }}>
-          <Grid item xs={12}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="h4" gutterBottom>
-                All Report
-              </Typography>
+        <Grid container spacing={3} alignItems="center" justifyContent="space-between" style={{ paddingTop: '25px' }}>
+          {/* Title Section */}
+          <Grid item xs={12} md={4}>
+            <Typography variant="h4" gutterBottom>
+              All Report
+            </Typography>
+          </Grid>
+
+          {/* Filters Section */}
+          {/* Adjusted to take up full width on smaller screens for better spacing */}
+          <Grid item container xs={12} md={8} spacing={3} justifyContent="flex-end">
+            {/* Select Project */}
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <TextField
                 select
-                style={{ minWidth: '200px', marginRight: '10px' }}
+                fullWidth
                 label="Select Project"
                 variant="outlined"
-                name="projectId"
                 value={selectedTaskProject || ''}
                 onChange={(event) => {
                   const projectId = event.target.value;
                   setSelectedTaskProject(projectId);
                   setSelectedTaskForm(null);
+                  setSelectedUserId(null);
                   fetchForms(projectId);
                 }}
               >
@@ -179,18 +209,18 @@ const Reports = () => {
                   <MenuItem disabled>No projects available</MenuItem>
                 )}
               </TextField>
+            </Grid>
 
+            {/* Select Form */}
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <TextField
                 select
-                style={{ minWidth: '200px' }}
+                fullWidth
                 label="Select Form"
                 variant="outlined"
-                name="formId"
                 value={selectedTaskForm || ''}
-                onChange={(event) => {
-                  const formId = event.target.value;
-                  setSelectedTaskForm(formId);
-                }}
+                onChange={(event) => setSelectedTaskForm(event.target.value)}
+                disabled={!selectedTaskProject} // Disable until a project is selected
               >
                 {forms.length > 0 ? (
                   forms.map((form) => (
@@ -202,25 +232,42 @@ const Reports = () => {
                   <MenuItem disabled>No forms available</MenuItem>
                 )}
               </TextField>
-            </Box>
+            </Grid>
+
+            {/* Select User */}
+            <Grid item xs={12} sm={6} md={4} lg={3}>
+              <TextField
+                select
+                fullWidth
+                label="Select User"
+                variant="outlined"
+                value={selectedUserId || ''}
+                onChange={(event) => setSelectedUserId(event.target.value)}
+                disabled={!selectedTaskForm} // Further conditional disabling
+              >
+                {users.length > 0 ? (
+                  users.map((user) => (
+                    <MenuItem key={user.user_id} value={user.user_id}>
+                      {user.firstname} {user.lastname}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>No users available</MenuItem>
+                )}
+              </TextField>
+            </Grid>
           </Grid>
+        </Grid>
+
+        <Grid container spacing={3} alignItems="center" style={{ paddingTop: '25px' }}>
           <Grid item xs={12}>
             {selectedTaskProject && selectedTaskForm ? (
               tasks.length > 0 ? (
                 <TableContainer component={Paper}>
                   <>
-                    <TextField
-                      label="Search"
-                      variant="outlined"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      sx={{ marginBottom: '10px', marginTop: '10px' }}
-                    />
-
                     <Table>
                       <TableHead>
                         <TableRow>
-                          <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>User Name</TableCell>
                           {uniqueFormFields.map((field) => (
                             <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }} key={field}>
                               {field}
@@ -229,51 +276,63 @@ const Reports = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {filteredTasks.map((task) => (
-                          <TableRow key={task._id}>
-                            <TableCell>
-                              {task.userFirstName} {task.userLastName}
+                        {filteredTasksByForm.length > 0 ? (
+                          filteredTasksByForm.map((task) => (
+                            <TableRow key={task.taskId}>
+                              {uniqueFormFields.map((field) => (
+                                <TableCell key={field}>
+                                  {Array.isArray(task.formFields[field])
+                                    ? task.formFields[field].join(', ')
+                                    : task.formFields[field] || 'N/A'}
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={uniqueFormFields.length + 1} align="center">
+                              No task available
                             </TableCell>
-                            {uniqueFormFields.map((field) => (
-                              <TableCell key={field}>
-                                {Array.isArray(task.formFields[field])
-                                  ? task.formFields[field].join(', ')
-                                  : task.formFields[field] || 'N/A'}
-                              </TableCell>
-                            ))}
                           </TableRow>
-                        ))}
+                        )}
                       </TableBody>
                     </Table>
-                    <TablePagination
-                      component="div"
-                      count={tasks.length}
-                      rowsPerPage={rowsPerPage}
-                      page={page}
-                      onPageChange={handleChangePage}
-                      onRowsPerPageChange={handleChangeRowsPerPage}
-                      rowsPerPageOptions={[5, 10, 15, 25, { label: 'All', value: -1 }]}
-                      labelRowsPerPage="Rows per page:"
-                      labelDisplayedRows={({ from, to, count }) => (
-                        <div style={{ fontSize: '14px', fontStyle: 'italic', marginTop: '5px' }}>
-                          Showing {from}-{to} of {count !== -1 ? count : 'more than'}
-                        </div>
-                      )}
-                      SelectProps={{
-                        style: { marginBottom: '0px' },
-                        renderValue: (value) => `${value} rows`
-                      }}
-                      nextIconButtonProps={{
-                        style: {
-                          marginBottom: '0px'
-                        }
-                      }}
-                      backIconButtonProps={{
-                        style: {
-                          marginBottom: '0px'
-                        }
-                      }}
-                    />
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px' }}>
+                      <div style={{ display: 'flex' }}>
+                        <FileDownloadIcon
+                          onClick={() => downloadExcel(filteredTasksByForm, uniqueFormFields)}
+                          style={{ cursor: 'pointer', marginRight: '10px' }} // Add margin for spacing
+                        />
+                        <Typography variant="subtitle1">Download Reports</Typography>
+                      </div>
+                      <TablePagination
+                        component="div"
+                        count={filteredTasksByForm.length}
+                        rowsPerPage={rowsPerPage}
+                        page={page}
+                        onPageChange={handleChangePage}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
+                        rowsPerPageOptions={[5, 10, 15, 25, { label: 'All', value: -1 }]}
+                        labelRowsPerPage="Rows per page:"
+                        labelDisplayedRows={({ from, to, count }) => `${from}-${to} of ${count !== -1 ? count : 'more than'}`}
+                        SelectProps={{
+                          style: { marginBottom: '0px' },
+                          renderValue: (value) => `${value} rows`
+                        }}
+                        nextIconButtonProps={{
+                          style: {
+                            marginBottom: '0px'
+                          }
+                        }}
+                        backIconButtonProps={{
+                          style: {
+                            marginBottom: '0px'
+                          }
+                        }}
+                        style={{ marginRight: '10px' }} // Adjust marginRight as needed for spacing from the right edge
+                      />
+                    </div>
                   </>
                 </TableContainer>
               ) : (

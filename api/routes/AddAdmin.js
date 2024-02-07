@@ -205,4 +205,20 @@ router.put('/editadmin/:userId', async (req, res) => {
   }
 });
 
+router.get('/countadmins', async (req, res) => {
+  try {
+    const count = await AddAdmin.countDocuments();
+    res.json({
+      success: true,
+      count: count
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+});
+
 module.exports = router;

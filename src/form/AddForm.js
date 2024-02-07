@@ -191,7 +191,7 @@ const AddForm = () => {
         setProjects(response.data.data);
       } catch (error) {
         console.error('Error fetching projects:', error);
-        toast.error('Error fetching projects');
+        // toast.error('Error fetching projects');
       }
     };
 
@@ -220,17 +220,19 @@ const AddForm = () => {
             <Grid item xs={12}>
               <>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <Typography variant="h4" gutterBottom>
-                    Add New Form
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleOpenDialog}
-                    style={{ backgroundColor: 'rgba(71, 121, 126, 1)' }}
-                  >
-                    Add Form
-                  </Button>
+                  <Grid item xs={12} display="flex" justifyContent="space-between" alignItems="center">
+                    <Typography variant="h4" gutterBottom>
+                      Add New Form
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleOpenDialog}
+                      style={{ backgroundColor: 'rgba(71, 121, 126, 1)' }}
+                    >
+                      Add Form
+                    </Button>
+                  </Grid>
                   <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
                     <DialogTitle style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'rgba(255,255,255)', fontSize: '20px' }}>
                       Add New Form
@@ -372,33 +374,118 @@ const AddForm = () => {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>Form Name</TableCell>
-                      <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>Project</TableCell>
-                      <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>Fields</TableCell>
-                      <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>Actions</TableCell>
+                      <TableCell
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          maxWidth: '200px',
+                          backgroundColor: 'rgba(71, 121, 126, 1)',
+                          color: 'white'
+                        }}
+                      >
+                        Form Name
+                      </TableCell>
+                      <TableCell
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          maxWidth: '200px',
+                          backgroundColor: 'rgba(71, 121, 126, 1)',
+                          color: 'white'
+                        }}
+                      >
+                        Project
+                      </TableCell>
+                      {/* <TableCell
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          maxWidth: '200px',
+                          backgroundColor: 'rgba(71, 121, 126, 1)',
+                          color: 'white'
+                        }}
+                      >
+                        Fields
+                      </TableCell> */}
+                      <TableCell
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          maxWidth: '200px',
+                          backgroundColor: 'rgba(71, 121, 126, 1)',
+                          color: 'white'
+                        }}
+                      >
+                        Actions
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {(rowsPerPage > 0 ? filteredForms.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : users).length > 0 ? (
                       (rowsPerPage > 0 ? filteredForms.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : users).map((form) => (
                         <TableRow key={form._id}>
-                          <TableCell>{form.formName}</TableCell>
-                          <TableCell>{form.projectName}</TableCell>
                           <TableCell>
+                            {' '}
+                            <div
+                              style={{
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                maxWidth: '200px'
+                              }}
+                            >
+                              {form.formName}{' '}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {' '}
+                            <div
+                              style={{
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                maxWidth: '200px'
+                              }}
+                            >
+                              {form.projectName}{' '}
+                            </div>
+                          </TableCell>
+                          {/* <TableCell>
                             {form.fields.map((field, index) => (
-                              <div key={index}>
+                              <div
+                                key={index}
+                                style={{
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  maxWidth: '200px'
+                                }}
+                              >
                                 {field.fieldName} - {field.fieldType}
                               </div>
                             ))}
-                          </TableCell>
+                          </TableCell> */}
                           <TableCell>
-                            <IconButton onClick={() => handleDeleteForm(form.form_id)}>
-                              <DeleteIcon />
-                            </IconButton>
-                            <IconButton onClick={() => handleEditForm(form.form_id)}>
-                              {/* Use handleEditForm to navigate to the edit form page */}
-                              <EditIcon />
-                            </IconButton>
+                            <div
+                              style={{
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                maxWidth: '200px'
+                              }}
+                            >
+                              <IconButton onClick={() => handleDeleteForm(form.form_id)}>
+                                <DeleteIcon />
+                              </IconButton>
+                              <IconButton onClick={() => handleEditForm(form.form_id)}>
+                                {/* Use handleEditForm to navigate to the edit form page */}
+                                <EditIcon />
+                              </IconButton>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))

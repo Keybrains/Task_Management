@@ -1,70 +1,57 @@
 import PropTypes from 'prop-types';
-
-// material-ui
-import { Chip, Grid, Stack, Typography } from '@mui/material';
-
-// project import
+import { animated, useSpring } from 'react-spring';
+import { Box, CardActionArea, Grid, Stack, Typography } from '@mui/material';
 import MainCard from 'components/MainCard';
 
-// assets
-import { RiseOutlined, FallOutlined } from '@ant-design/icons';
+// Animated Typography for the count
+const AnimatedTypography = animated(Typography);
 
-// ==============================|| STATISTICS - ECOMMERCE CARD  ||============================== //
+const AnalyticEcommerce = ({ color = '#47797e', title, count, icon: Icon }) => {
+  // Spring animation for the count
+  const props = useSpring({
+    from: { number: 0 },
+    to: { number: parseInt(count, 10) || 0 }
+  });
 
-const AnalyticEcommerce = ({ color, title, count, percentage, isLoss }) => (
-  <MainCard contentSX={{ p: 2.25, backgroundColor: 'rgba(71, 121, 126, 0.3)', border: '1px solid #47797e' }}>
-    <Stack spacing={0.5}>
-      <Typography variant="h6" color="textSecondary">
-        {title}
-      </Typography>
-      <Grid container alignItems="center">
-        <Grid item>
-          <Typography variant="h4" color="inherit">
-            {count}
-          </Typography>
-        </Grid>
-        {percentage && (
-          <Grid item>
-            <Chip
-              variant="combined"
-              color={color}
-              icon={
-                <>
-                  {!isLoss && <RiseOutlined style={{ fontSize: '0.75rem', color: 'inherit' }} />}
-                  {isLoss && <FallOutlined style={{ fontSize: '0.75rem', color: 'inherit' }} />}
-                </>
-              }
-              label={`${percentage}%`}
-              sx={{ ml: 1.25, pl: 1 }}
-              size="small"
-            />
+  return (
+    <MainCard
+      content={false}
+      sx={{
+        p: 2,
+        py: 3,
+        backgroundColor: 'rgba(71, 121, 126, 0.12)',
+        '&:hover': {
+          backgroundColor: 'rgba(71, 121, 126, 0.18)'
+        },
+        transition: 'background-color 0.3s',
+        borderLeft: `10px solid ${color}`,
+        boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)'
+      }}
+    >
+      <CardActionArea>
+        <Stack spacing={2} justifyContent="center" alignItems="center">
+          <Box display="flex" alignItems="center" justifyContent="center" gap={2}>
+            {Icon && <Icon style={{ fontSize: '2.25rem', color }} />}
+            <Typography variant="h5" fontWeight="bold" color="textSecondary">
+              {title}
+            </Typography>
+          </Box>
+          <Grid container justifyContent="center">
+            <AnimatedTypography variant="h2" component="div" color="textPrimary" style={{ fontWeight: 'bold', paddingLeft: '50px' }}>
+              {props.number.to((n) => n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ','))}
+            </AnimatedTypography>
           </Grid>
-        )}
-      </Grid>
-    </Stack>
-    {/* <Box sx={{ pt: 2.25 }}>
-      <Typography variant="caption" color="textSecondary">
-        You made an extra{' '}
-        <Typography component="span" variant="caption" sx={{ color: `${color || 'primary'}.main` }}>
-          {extra}
-        </Typography>{' '}
-        this year
-      </Typography>
-    </Box> */}
-  </MainCard>
-);
+        </Stack>
+      </CardActionArea>
+    </MainCard>
+  );
+};
 
 AnalyticEcommerce.propTypes = {
   color: PropTypes.string,
   title: PropTypes.string,
-  count: PropTypes.string,
-  percentage: PropTypes.number,
-  isLoss: PropTypes.bool,
-  extra: PropTypes.oneOfType([PropTypes.node, PropTypes.string])
-};
-
-AnalyticEcommerce.defaultProps = {
-  color: 'primary'
+  count: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  icon: PropTypes.elementType
 };
 
 export default AnalyticEcommerce;

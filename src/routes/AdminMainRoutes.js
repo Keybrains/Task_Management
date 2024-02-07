@@ -11,7 +11,7 @@ import Reports from 'report/Reports';
 import EditForm from 'form/EditFrom';
 
 // render - dashboard
-const DashboardDefault = Loadable(lazy(() => import('pages/dashboard')));
+const DashboardDefault = Loadable(lazy(() => import('pages/dashboard/DashboardDefault')));
 
 // render - sample page
 const SamplePage = Loadable(lazy(() => import('pages/extra-pages/SamplePage')));

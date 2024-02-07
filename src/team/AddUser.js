@@ -301,13 +301,15 @@ const AddUser = () => {
             pauseOnHover
           />
           <Grid item xs={12}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="h4" gutterBottom>
-                All User
-              </Typography>
-              <Button variant="contained" style={{ backgroundColor: 'rgba(71, 121, 126, 1)' }} onClick={handleOpenDialog}>
-                Add User
-              </Button>
+            <Box>
+              <Grid item xs={12} display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="h4" gutterBottom>
+                  All User
+                </Typography>
+                <Button variant="contained" style={{ backgroundColor: 'rgba(71, 121, 126, 1)' }} onClick={handleOpenDialog}>
+                  Add User
+                </Button>
+              </Grid>
               <Dialog open={openDialog} onClose={handleCloseDialog}>
                 <DialogTitle style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'rgba(255,255,255)', fontSize: '20px' }}>
                   Add User
@@ -415,56 +417,150 @@ const AddUser = () => {
           </Grid>
           <Grid item xs={12}>
             <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>First Name</TableCell>
-                    <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>Last Name</TableCell>
-                    <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>Project Name</TableCell>
-                    <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>Email</TableCell>
-                    <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>Phone Number</TableCell>
-                    <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>Status</TableCell>
-                    <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>Action</TableCell>
-                  </TableRow>
-                </TableHead>
-
-                <TableBody>
-                  {(rowsPerPage > 0 ? filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : admins).length > 0 ? (
-                    (rowsPerPage > 0 ? filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : admins).map((user) => (
-                      <TableRow key={user._id}>
-                        <TableCell>{user.firstname}</TableCell>
-                        <TableCell>{user.lastname}</TableCell>
-                        <TableCell>{user.projectName}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>{user.phonenumber}</TableCell>
-                        <TableCell>
-                          <Button
-                            variant="contained"
-                            color={user.status === 'activate' ? 'success' : 'error'}
-                            onClick={() => promptToggleStatus(user)}
-                          >
-                            {user.status === 'activate' ? 'Active' : 'Inactive'}
-                          </Button>
-                        </TableCell>
-                        <TableCell>
-                          <IconButton onClick={() => promptDeleteUser(user)}>
-                            <DeleteIcon />
-                          </IconButton>
-                          <IconButton onClick={() => promptEditAdmin(user)}>
-                            <EditIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <Table>
+                  <TableHead>
                     <TableRow>
-                      <TableCell colSpan={7} style={{ textAlign: 'center' }}>
-                        No users available.
+                      <TableCell
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          maxWidth: '120px',
+                          backgroundColor: 'rgba(71, 121, 126, 1)',
+                          color: 'white'
+                        }}
+                      >
+                        First Name
+                      </TableCell>
+                      <TableCell
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          maxWidth: '120px',
+                          backgroundColor: 'rgba(71, 121, 126, 1)',
+                          color: 'white'
+                        }}
+                      >
+                        Last Name
+                      </TableCell>
+                      <TableCell
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          maxWidth: '120px',
+                          backgroundColor: 'rgba(71, 121, 126, 1)',
+                          color: 'white'
+                        }}
+                      >
+                        Project Name
+                      </TableCell>
+                      <TableCell
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          maxWidth: '120px',
+                          backgroundColor: 'rgba(71, 121, 126, 1)',
+                          color: 'white'
+                        }}
+                      >
+                        Email
+                      </TableCell>
+                      <TableCell
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          maxWidth: '120px',
+                          backgroundColor: 'rgba(71, 121, 126, 1)',
+                          color: 'white'
+                        }}
+                      >
+                        Phone Number
+                      </TableCell>
+                      <TableCell
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          maxWidth: '120px',
+                          backgroundColor: 'rgba(71, 121, 126, 1)',
+                          color: 'white'
+                        }}
+                      >
+                        Status
+                      </TableCell>
+                      <TableCell
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          maxWidth: '120px',
+                          backgroundColor: 'rgba(71, 121, 126, 1)',
+                          color: 'white'
+                        }}
+                      >
+                        Action
                       </TableCell>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHead>
+
+                  <TableBody>
+                    {(rowsPerPage > 0 ? filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : admins).length > 0 ? (
+                      (rowsPerPage > 0 ? filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : admins).map((user) => (
+                        <TableRow key={user._id}>
+                          <TableCell>{user.firstname}</TableCell>
+                          <TableCell>{user.lastname}</TableCell>
+                          <TableCell>
+                            {user.projectName.split(',').map((projectName, index) => (
+                              <div
+                                key={index}
+                                style={{
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  maxWidth: '200px' // Adjust the maxWidth to fit your design needs
+                                }}
+                              >
+                                {projectName.trim()}
+                              </div>
+                            ))}
+                          </TableCell>
+
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>{user.phonenumber}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="contained"
+                              color={user.status === 'activate' ? 'success' : 'error'}
+                              onClick={() => promptToggleStatus(user)}
+                            >
+                              {user.status === 'activate' ? 'Active' : 'Inactive'}
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <IconButton onClick={() => promptDeleteUser(user)}>
+                              <DeleteIcon />
+                            </IconButton>
+                            <IconButton onClick={() => promptEditAdmin(user)}>
+                              <EditIcon />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} style={{ textAlign: 'center' }}>
+                          No users available.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </TableContainer>
             <TablePagination
               component="div"

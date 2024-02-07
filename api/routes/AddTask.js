@@ -40,34 +40,69 @@ router.post('/addtask', async (req, res) => {
   }
 });
 
-router.get('/adminstasks/:adminId', async (req, res) => {
-  try {
-    const adminId = req.params.adminId;
+  // router.get('/adminstasks/:adminId', async (req, res) => {
+  //   try {
+  //     const adminId = req.params.adminId;
 
-    const tasks = await Task.find({ adminId });
+  //     const tasks = await Task.find({ adminId });
 
-    const tasksWithUserDetails = await Promise.all(
-      tasks.map(async (task) => {
-        const user = await User.findOne({ user_id: task.userId });
-        return {
-          taskId: task._id,
-          formId: task.formId,
-          formFields: task.formFields,
-          userId: task.userId,
-          adminId: task.adminId,
-          userFirstName: user ? user.firstname : 'N/A',
-          userLastName: user ? user.lastname : 'N/A'
-        };
-      })
-    );
+  //     const tasksWithUserDetails = await Promise.all(
+  //       tasks.map(async (task) => {
+  //         const user = await User.findOne({ user_id: task.userId });
+  //         return {
+  //           taskId: task._id,
+  //           formId: task.formId,
+  //           formFields: task.formFields,
+  //           userId: task.userId,
+  //           adminId: task.adminId,
+  //           userFirstName: user ? user.firstname : 'N/A',
+  //           userLastName: user ? user.lastname : 'N/A'
+  //         };
+  //       })
+  //     );
 
-    res.status(200).json(tasksWithUserDetails);
-  } catch (error) {
-    console.error('Error retrieving tasks:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-});
-
+  //     res.status(200).json(tasksWithUserDetails);
+  //   } catch (error) {
+  //     console.error('Error retrieving tasks:', error);
+  //     res.status(500).json({ message: 'Internal Server Error' });
+  //   }
+  // });
+  router.get('/adminstasks/:adminId', async (req, res) => {
+    try {
+      const { adminId } = req.params;
+      // Extract userId from query parameters
+      const { userId } = req.query;
+  
+      // Build the query object dynamically
+      let query = { adminId };
+      if (userId) {
+        query.userId = userId; // Add userId to the query if it's provided
+      }
+  
+      const tasks = await Task.find(query);
+  
+      const tasksWithUserDetails = await Promise.all(
+        tasks.map(async (task) => {
+          const user = await User.findOne({ user_id: task.userId });
+          return {
+            taskId: task._id,
+            formId: task.formId,
+            formFields: task.formFields,
+            userId: task.userId,
+            adminId: task.adminId,
+            userFirstName: user ? user.firstname : 'N/A',
+            userLastName: user ? user.lastname : 'N/A'
+          };
+        })
+      );
+  
+      res.status(200).json(tasksWithUserDetails);
+    } catch (error) {
+      console.error('Error retrieving tasks:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  });
+  
 router.get('/userstasks/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;

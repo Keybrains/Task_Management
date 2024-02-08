@@ -455,7 +455,7 @@ const AddTask = () => {
             </Box>
           </Grid>
           <Grid item xs={12}>
-            {tasks.length > 0 ? (
+            {tasks && tasks.length > 0 ? (
               <TableContainer component={Paper}>
                 <Table>
                   <TableHead>
@@ -515,9 +515,13 @@ const AddTask = () => {
                   }}
                 />
               </TableContainer>
+            ) : tasks && tasks.length === 0 ? (
+              <Typography variant="body1" style={{ paddingTop: '15px', fontWeight: 'bold' }}>
+                No tasks available.
+              </Typography>
             ) : (
               <Typography variant="body1" style={{ paddingTop: '15px', fontWeight: 'bold' }}>
-                Please select the project and from for disaply task.
+                Please select the project and form to display tasks.
               </Typography>
             )}
           </Grid>

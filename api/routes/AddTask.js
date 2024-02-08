@@ -40,101 +40,6 @@ router.post('/addtask', async (req, res) => {
   }
 });
 
-  // router.get('/adminstasks/:adminId', async (req, res) => {
-  //   try {
-  //     const adminId = req.params.adminId;
-
-  //     const tasks = await Task.find({ adminId });
-
-  //     const tasksWithUserDetails = await Promise.all(
-  //       tasks.map(async (task) => {
-  //         const user = await User.findOne({ user_id: task.userId });
-  //         return {
-  //           taskId: task._id,
-  //           formId: task.formId,
-  //           formFields: task.formFields,
-  //           userId: task.userId,
-  //           adminId: task.adminId,
-  //           userFirstName: user ? user.firstname : 'N/A',
-  //           userLastName: user ? user.lastname : 'N/A'
-  //         };
-  //       })
-  //     );
-
-  //     res.status(200).json(tasksWithUserDetails);
-  //   } catch (error) {
-  //     console.error('Error retrieving tasks:', error);
-  //     res.status(500).json({ message: 'Internal Server Error' });
-  //   }
-  // });
-  router.get('/adminstasks/:adminId', async (req, res) => {
-    try {
-      const { adminId } = req.params;
-      // Extract userId from query parameters
-      const { userId } = req.query;
-  
-      // Build the query object dynamically
-      let query = { adminId };
-      if (userId) {
-        query.userId = userId; // Add userId to the query if it's provided
-      }
-  
-      const tasks = await Task.find(query);
-  
-      const tasksWithUserDetails = await Promise.all(
-        tasks.map(async (task) => {
-          const user = await User.findOne({ user_id: task.userId });
-          return {
-            taskId: task._id,
-            formId: task.formId,
-            formFields: task.formFields,
-            userId: task.userId,
-            adminId: task.adminId,
-            userFirstName: user ? user.firstname : 'N/A',
-            userLastName: user ? user.lastname : 'N/A'
-          };
-        })
-      );
-  
-      res.status(200).json(tasksWithUserDetails);
-    } catch (error) {
-      console.error('Error retrieving tasks:', error);
-      res.status(500).json({ message: 'Internal Server Error' });
-    }
-  });
-  
-router.get('/userstasks/:userId', async (req, res) => {
-  try {
-    const userId = req.params.userId;
-
-    const tasks = await Task.find({ userId });
-
-    const tasksWithUserDetails = await Promise.all(
-      tasks.map(async (task) => {
-        const user = await User.findOne({ user_id: task.userId });
-        const project = await AddProject.findOne({ project_id: task.projectId }); // Add this line to get project details
-
-        return {
-          taskId: task._id,
-          formId: task.formId,
-          formFields: task.formFields,
-          userId: task.userId,
-          adminId: task.adminId,
-          userFirstName: user ? user.firstname : 'N/A',
-          userLastName: user ? user.lastname : 'N/A',
-          projectId: task.projectId,
-          projectName: project ? project.projectName : 'N/A' // Include project details
-        };
-      })
-    );
-
-    res.status(200).json(tasksWithUserDetails);
-  } catch (error) {
-    console.error('Error retrieving tasks:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-});
-
 router.delete('/deletetask/:taskId', async (req, res) => {
   try {
     const taskId = req.params.taskId;
@@ -154,71 +59,46 @@ router.delete('/deletetask/:taskId', async (req, res) => {
   }
 });
 
-router.get('/userstasks/:userId', async (req, res) => {
-  const { userId } = req.params;
-  const { projectId, formId } = req.query; // Get projectId and formId from query parameters
-
+router.get('/adminstasks/:adminId', async (req, res) => {
   try {
-    let query = { userId };
+    const { adminId } = req.params;
+    const { userId } = req.query;
 
-    if (projectId) {
-      query.projectId = projectId;
+    let query = { adminId };
+    if (userId) {
+      query.userId = userId;
     }
+    const tasks = await Task.find(query);
+    const tasksWithUserDetails = await Promise.all(
+      tasks.map(async (task) => {
+        const user = await User.findOne({ user_id: task.userId });
+        return {
+          taskId: task._id,
+          formId: task.formId,
+          formFields: task.formFields,
+          userId: task.userId,
+          adminId: task.adminId,
+          userFirstName: user ? user.firstname : 'N/A',
+          userLastName: user ? user.lastname : 'N/A',
+          createAt: task.createAt
+        };
+      })
+    );
 
-    if (formId) {
-      query.formId = formId;
-    }
-
-    const tasks = await Task.find(query); // Adjust this line according to your database query method
-    res.status(200).json(tasks);
+    res.status(200).json(tasksWithUserDetails);
   } catch (error) {
-    console.error('Error fetching tasks:', error);
+    console.error('Error retrieving tasks:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 
-// router.get('/adminstasks/:adminId', async (req, res) => {
-//   const { adminId } = req.params;
-//   const { projectId, formId } = req.query;
-
-//   try {
-//     let query = { adminId };
-
-//     if (projectId) {
-//       query.projectId = projectId;
-//     }
-
-//     if (formId) {
-//       query.formId = formId;
-//     }
-
-//     const tasks = await Task.find(query);
-//     res.status(200).json(tasks);
-//   } catch (error) {
-//     console.error('Error fetching tasks:', error);
-//     res.status(500).json({ message: 'Internal Server Error' });
-//   }
-// });
-
-router.get('/adminstasks/:adminId', async (req, res) => {
-  const { adminId } = req.params;
-  const { projectId, formId } = req.query;
-
+router.get('/userstasks/:userId', async (req, res) => {
   try {
-    let query = { adminId };
+    const userId = req.params.userId;
 
-    if (projectId) {
-      query.projectId = projectId;
-    }
+    const tasks = await Task.find({ userId });
 
-    if (formId) {
-      query.formId = formId;
-    }
-
-    const tasks = await Task.find(query);
-
-    // Fetch additional details for each task
-    const tasksWithDetails = await Promise.all(
+    const tasksWithUserDetails = await Promise.all(
       tasks.map(async (task) => {
         const user = await User.findOne({ user_id: task.userId });
         const project = await AddProject.findOne({ project_id: task.projectId });
@@ -237,11 +117,43 @@ router.get('/adminstasks/:adminId', async (req, res) => {
       })
     );
 
-    res.status(200).json(tasksWithDetails);
+    res.status(200).json(tasksWithUserDetails);
   } catch (error) {
-    console.error('Error fetching tasks:', error);
+    console.error('Error retrieving tasks:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
+router.get('/report/user/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Fetch all tasks for the given userId
+    const tasks = await Task.find({ userId });
+
+    // Optionally, format the tasks data as needed for the report
+    const reportData = tasks.map(task => {
+      const { _id, formId, projectId, projectName, createAt, updateAt, formFields } = task;
+      // Add any additional formatting or data transformation for the report here
+      return {
+        taskId: _id,
+        formId,
+        projectId,
+        projectName,
+        createdAt: createAt,
+        updatedAt: updateAt,
+        // Assuming formFields is an object and you want to include it directly
+        formFields,
+      };
+    });
+
+    // Respond with the report data
+    res.status(200).json(reportData);
+  } catch (error) {
+    console.error('Error retrieving tasks report:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
 
 module.exports = router;

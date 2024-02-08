@@ -18,7 +18,48 @@ import * as XLSX from 'xlsx';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import 'react-toastify/dist/ReactToastify.css';
 import Loader from 'user/components/Loader';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { CloudDownload as CloudDownloadIcon, Clear as ClearIcon, DateRange as DateRangeIcon } from '@material-ui/icons';
+
+// Custom styles to enhance the look
+const useStyles = makeStyles((theme) => ({
+  dialogTitle: {
+    backgroundColor: 'rgba(71, 121, 126, 1)',
+    color: 'rgba(255,255,255)'
+  },
+  dialogCustom: {
+    width: '40%', // Custom width
+    height: '50%' // Custom maximum height
+  },
+  dialogContent: {
+    marginTop: theme.spacing(2)
+  },
+  button: {
+    margin: theme.spacing(1)
+  },
+  buttonIcon: {
+    marginRight: theme.spacing(1)
+  },
+  clearDatesButton: {
+    borderColor: theme.palette.error.main,
+    color: 'rgba(255,114,118)',
+    '&:hover': {
+      borderColor: theme.palette.error.dark
+    }
+  },
+  downloadButton: {
+    borderColor: 'rgba(71, 121, 126, 1)',
+    color: 'rgba(71, 121, 126, 1)',
+    '&:hover': {
+      borderColor: 'rgba(71, 121, 126, 1)',
+      backgroundColor: 'transparent'
+    }
+  }
+}));
 const fullScreenLoaderStyle = {
   position: 'fixed',
   top: 0,
@@ -142,12 +183,44 @@ const Reports = () => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+
+  //download excel
+  const [openDownloadDialog, setOpenDownloadDialog] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const handleCloseDownloadDialog = () => setOpenDownloadDialog(false);
+  const handleOpenDownloadDialog = () => setOpenDownloadDialog(true);
+
+  const downloadFilteredData = () => {
+    if (!startDate || !endDate) {
+      toast.error('Please select both start and end dates.');
+      return;
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const filteredData = filteredTasksByForm.filter((task) => {
+      const taskDate = new Date(task.createAt);
+      return taskDate >= start && taskDate <= end;
+    });
+
+    if (filteredData.length === 0) {
+      toast.error('No data found for the selected date range.');
+      return;
+    }
+    handleCloseDownloadDialog();
+    downloadExcel(filteredData, uniqueFormFields);
+  };
+
   const downloadExcel = (filteredTasksByForm, uniqueFormFields) => {
     const wb = XLSX.utils.book_new();
-    const headers = ['User Name', ...uniqueFormFields];
+    const headers = ['Create At', 'User Name', ...uniqueFormFields];
     const ws_data = [headers];
     filteredTasksByForm.forEach((task) => {
       const row = [
+        formatDate(task.createAt),
         `${task.userFirstName} ${task.userLastName}`,
         ...uniqueFormFields.map((field) =>
           Array.isArray(task.formFields[field]) ? task.formFields[field].join(', ') : task.formFields[field] || 'N/A'
@@ -164,6 +237,11 @@ const Reports = () => {
     XLSX.writeFile(wb, 'reports.xlsx');
   };
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+  const classes = useStyles();
   return (
     <>
       {loading && (
@@ -173,17 +251,13 @@ const Reports = () => {
       )}
       <div style={loading ? { display: 'none' } : {}}>
         <Grid container spacing={3} alignItems="center" justifyContent="space-between" style={{ paddingTop: '25px' }}>
-          {/* Title Section */}
           <Grid item xs={12} md={4}>
             <Typography variant="h4" gutterBottom>
               All Report
             </Typography>
           </Grid>
 
-          {/* Filters Section */}
-          {/* Adjusted to take up full width on smaller screens for better spacing */}
           <Grid item container xs={12} md={8} spacing={3} justifyContent="flex-end">
-            {/* Select Project */}
             <Grid item xs={12} sm={6} md={4} lg={3}>
               <TextField
                 select
@@ -211,7 +285,6 @@ const Reports = () => {
               </TextField>
             </Grid>
 
-            {/* Select Form */}
             <Grid item xs={12} sm={6} md={4} lg={3}>
               <TextField
                 select
@@ -220,7 +293,7 @@ const Reports = () => {
                 variant="outlined"
                 value={selectedTaskForm || ''}
                 onChange={(event) => setSelectedTaskForm(event.target.value)}
-                disabled={!selectedTaskProject} // Disable until a project is selected
+                disabled={!selectedTaskProject}
               >
                 {forms.length > 0 ? (
                   forms.map((form) => (
@@ -234,7 +307,6 @@ const Reports = () => {
               </TextField>
             </Grid>
 
-            {/* Select User */}
             <Grid item xs={12} sm={6} md={4} lg={3}>
               <TextField
                 select
@@ -243,7 +315,7 @@ const Reports = () => {
                 variant="outlined"
                 value={selectedUserId || ''}
                 onChange={(event) => setSelectedUserId(event.target.value)}
-                disabled={!selectedTaskForm} // Further conditional disabling
+                disabled={!selectedTaskForm}
               >
                 {users.length > 0 ? (
                   users.map((user) => (
@@ -268,6 +340,7 @@ const Reports = () => {
                     <Table>
                       <TableHead>
                         <TableRow>
+                          <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>Create At</TableCell>
                           {uniqueFormFields.map((field) => (
                             <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }} key={field}>
                               {field}
@@ -279,6 +352,7 @@ const Reports = () => {
                         {filteredTasksByForm.length > 0 ? (
                           filteredTasksByForm.map((task) => (
                             <TableRow key={task.taskId}>
+                              <TableCell>{formatDate(task.createAt)}</TableCell>
                               {uniqueFormFields.map((field) => (
                                 <TableCell key={field}>
                                   {Array.isArray(task.formFields[field])
@@ -300,10 +374,7 @@ const Reports = () => {
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px' }}>
                       <div style={{ display: 'flex' }}>
-                        <FileDownloadIcon
-                          onClick={() => downloadExcel(filteredTasksByForm, uniqueFormFields)}
-                          style={{ cursor: 'pointer', marginRight: '10px' }} // Add margin for spacing
-                        />
+                        <FileDownloadIcon onClick={handleOpenDownloadDialog} style={{ cursor: 'pointer', marginRight: '10px' }} />
                         <Typography variant="subtitle1">Download Reports</Typography>
                       </div>
                       <TablePagination
@@ -330,7 +401,7 @@ const Reports = () => {
                             marginBottom: '0px'
                           }
                         }}
-                        style={{ marginRight: '10px' }} // Adjust marginRight as needed for spacing from the right edge
+                        style={{ marginRight: '10px' }}
                       />
                     </div>
                   </>
@@ -347,6 +418,67 @@ const Reports = () => {
             )}
           </Grid>
         </Grid>
+
+        <Dialog open={openDownloadDialog} onClose={handleCloseDownloadDialog} PaperProps={{ className: classes.dialogCustom }}>
+          <DialogTitle className={classes.dialogTitle}>Download Reports</DialogTitle>
+          <DialogContent className={classes.dialogContent}>
+            <TextField
+              label="Start Date"
+              type="date"
+              fullWidth
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              style={{ marginTop: '25px' }}
+            />
+            <TextField
+              label="End Date"
+              type="date"
+              fullWidth
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              style={{ marginTop: '25px' }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button
+              className={`${classes.button} ${classes.downloadButton}`}
+              onClick={downloadFilteredData}
+              startIcon={<DateRangeIcon />}
+              variant="outlined"
+            >
+              Download Date Range
+            </Button>
+            <Button
+              className={`${classes.button} ${classes.clearDatesButton}`}
+              onClick={() => {
+                setStartDate('');
+                setEndDate('');
+              }}
+              variant="outlined"
+              startIcon={<ClearIcon />}
+            >
+              Clear Dates
+            </Button>
+
+            <Button
+              variant="outlined"
+              className={`${classes.button} ${classes.downloadButton}`}
+              onClick={() => {
+                setStartDate('');
+                setEndDate('');
+                downloadExcel(filteredTasksByForm, uniqueFormFields);
+                handleCloseDownloadDialog();
+              }}
+              disabled={startDate !== ''}
+              startIcon={<CloudDownloadIcon />}
+            >
+              Download All
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <ToastContainer />
       </div>
     </>
   );

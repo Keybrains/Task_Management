@@ -1,6 +1,8 @@
 // material-ui
 import { Box, useMediaQuery } from '@mui/material';
 // import { GithubOutlined } from '@ant-design/icons';
+import React from 'react';
+// The rest of your imports
 
 // project import
 import Search from './UserSearch';

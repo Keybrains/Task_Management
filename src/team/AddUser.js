@@ -618,9 +618,11 @@ const AddUser = () => {
             </DialogActions>
           </Dialog>
           <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
-            <DialogTitle>Edit Admin</DialogTitle>
+            <DialogTitle style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'rgba(255,255,255)', fontSize: '20px' }}>
+              Edit User
+            </DialogTitle>
             <DialogContent>
-              <Grid container spacing={2} style={{ paddingTop: '10px' }}>
+              <Grid container spacing={2} style={{ paddingTop: '20px' }}>
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth

@@ -47,7 +47,7 @@ router.post('/addproject', async (req, res) => {
 router.get('/projects/:adminId', async (req, res) => {
   try {
     const adminId = req.params.adminId;
-    const projects = await AddProject.find({ admin_id: adminId });
+    let projects = await AddProject.find({ admin_id: adminId });
 
     if (!projects || projects.length === 0) {
       return res.status(404).json({
@@ -55,6 +55,9 @@ router.get('/projects/:adminId', async (req, res) => {
         message: 'No projects found for the provided admin ID'
       });
     }
+
+    // Reverse the projects array
+    projects = projects.reverse();
 
     res.json({
       success: true,
@@ -93,5 +96,69 @@ router.get('/projects/names/:adminId', async (req, res) => {
     });
   }
 });
+
+router.put('/editproject/:projectId', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const updatedProject = await AddProject.findOneAndUpdate(
+      { project_id: projectId },
+      {
+        $set: req.body, // Update fields sent in request body
+        updateAt: moment().format('YYYY-MM-DD HH:mm:ss') // Update the 'updateAt' field to current time
+      },
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedProject) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Project updated successfully',
+      data: updatedProject
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+});
+
+router.delete('/deleteproject/:projectId', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+
+    // Ensure projectId is correctly parsed/validated if needed
+    // For instance, if project_id is supposed to be a number, ensure it's parsed as one
+    // const projectId = parseInt(req.params.projectId);
+
+    const deletedProject = await AddProject.findOneAndDelete({ project_id: projectId });
+
+    if (!deletedProject) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Project deleted successfully'
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+});
+
 
 module.exports = router;

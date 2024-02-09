@@ -29,7 +29,7 @@ const AdminSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    default: 'activate'
+    default: 'pending'
   },
   createAt: {
     type: String

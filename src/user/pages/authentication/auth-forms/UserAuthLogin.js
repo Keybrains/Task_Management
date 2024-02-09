@@ -79,6 +79,35 @@ const UserAuthLogin = () => {
           email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
           password: Yup.string().max(255).required('Password is required')
         })}
+        // onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
+        //   try {
+        //     const response = await axiosInstance.post('/addusers/userlogin', values, {
+        //       headers: {
+        //         'Content-Type': 'application/json'
+        //       }
+        //     });
+
+        //     const token = response.data.token; // Assuming the token is present in the response data
+
+        //     // Store the token in local storage
+        //     localStorage.setItem('authToken', token);
+
+        //     // Decode and store the decoded token
+        //     handleTokenDecoding(token);
+
+        //     // Redirect to the dashboard
+        //     navigate('/user/allproject');
+
+        //     setStatus({ success: true });
+        //     setSubmitting(false);
+        //   } catch (err) {
+        //     console.error('Login failed:', err);
+
+        //     setStatus({ success: false });
+        //     setErrors({ submit: 'Login failed. Please check your credentials.' });
+        //     setSubmitting(false);
+        //   }
+        // }}
         onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
           try {
             const response = await axiosInstance.post('/addusers/userlogin', values, {
@@ -86,23 +115,20 @@ const UserAuthLogin = () => {
                 'Content-Type': 'application/json'
               }
             });
-
-            const token = response.data.token; // Assuming the token is present in the response data
-
-            // Store the token in local storage
-            localStorage.setItem('authToken', token);
-
-            // Decode and store the decoded token
-            handleTokenDecoding(token);
-
-            // Redirect to the dashboard
-            navigate('/user/allproject');
-
-            setStatus({ success: true });
+            const token = response.data.token;
+            const decoded = jwtDecode(token);
+            if (decoded.userId.status !== 'pending' && decoded.userId.status !== 'deactivate') {
+              localStorage.setItem('authToken', token);
+              handleTokenDecoding(token);
+              navigate('/user/allproject');
+              setStatus({ success: true });
+            } else {
+              setStatus({ success: false });
+              setErrors({ submit: 'Your account is not active. Please contact the administrator.' });
+            }
             setSubmitting(false);
           } catch (err) {
             console.error('Login failed:', err);
-
             setStatus({ success: false });
             setErrors({ submit: 'Login failed. Please check your credentials.' });
             setSubmitting(false);

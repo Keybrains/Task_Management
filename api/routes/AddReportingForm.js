@@ -41,7 +41,18 @@ router.get('/getforms', async (req, res) => {
 router.get('/getforms/:admin_id', async (req, res) => {
   try {
     const { admin_id } = req.params;
-    const forms = await ReportingForm.find({ admin_id });
+    let forms = await ReportingForm.find({ admin_id });
+
+    if (!forms || forms.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No forms found for this admin'
+      });
+    }
+
+    // Reverse the forms array
+    forms = forms.reverse();
+
     res.status(200).json({ forms });
   } catch (error) {
     console.error('Error fetching forms:', error);

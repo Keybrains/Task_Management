@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
+import axiosInstance from 'config/AxiosInstanceAdmin';
+import { ToastContainer, toast } from 'react-toastify';
 
 // material-ui
 import {
@@ -23,16 +25,17 @@ import * as Yup from 'yup';
 import { Formik } from 'formik';
 
 // project import
-import FirebaseSocial from './FirebaseSocial';
 import AnimateButton from 'components/@extended/AnimateButton';
 import { strengthColor, strengthIndicator } from 'utils/password-strength';
 
 // assets
 import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import { useNavigate } from '../../../../node_modules/react-router-dom/dist/index';
 
 // ============================|| FIREBASE - REGISTER ||============================ //
 
 const AuthRegister = () => {
+  const navigate = useNavigate();
   const [level, setLevel] = useState();
   const [showPassword, setShowPassword] = useState(false);
   const handleClickShowPassword = () => {
@@ -52,6 +55,11 @@ const AuthRegister = () => {
     changePassword('');
   }, []);
 
+  // Example function to handle navigation
+  const handleNavigation = () => {
+    navigate('/admin/login');
+  };
+
   return (
     <>
       <Formik
@@ -59,6 +67,7 @@ const AuthRegister = () => {
           firstname: '',
           lastname: '',
           email: '',
+          phonenumber: '',
           company: '',
           password: '',
           submit: null
@@ -66,24 +75,49 @@ const AuthRegister = () => {
         validationSchema={Yup.object().shape({
           firstname: Yup.string().max(255).required('First Name is required'),
           lastname: Yup.string().max(255).required('Last Name is required'),
+          phonenumber: Yup.string()
+            .matches(/^[0-9]+$/, 'Must be only digits')
+            .min(10, 'Phone number must be exactly 10 digits')
+            .max(10, 'Phone number must be exactly 10 digits')
+            .required('Phone number is required'),
           email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
           password: Yup.string().max(255).required('Password is required')
         })}
         onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
           try {
+            // Replace '/register' with your actual backend registration endpoint
+            await axiosInstance.post('/addadmins/addadmin', values);
+            toast.success('Registration successful!');
+            setStatus({ success: true });
+            // Redirect or handle post-registration logic here
+            navigate('/admin/login');
+          } catch (error) {
+            console.error('Registration error:', error);
+            const status = error.response ? error.response.status : null;
+            // Enclose case content in braces to create a block scope
+            switch (status) {
+              case 401: {
+                toast.error('Email already exists');
+                break;
+              }
+              case 402: {
+                toast.error('Phone number already exists');
+                break;
+              }
+              default: {
+                const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
+                toast.error(errorMessage);
+                setErrors({ submit: errorMessage });
+              }
+            }
             setStatus({ success: false });
-            setSubmitting(false);
-          } catch (err) {
-            console.error(err);
-            setStatus({ success: false });
-            setErrors({ submit: err.message });
             setSubmitting(false);
           }
         }}
       >
         {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
           <form noValidate onSubmit={handleSubmit}>
-            <Grid container spacing={3}>
+            <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
                 <Stack spacing={1}>
                   <InputLabel htmlFor="firstname-signup">First Name*</InputLabel>
@@ -127,6 +161,7 @@ const AuthRegister = () => {
                   )}
                 </Stack>
               </Grid>
+
               <Grid item xs={12}>
                 <Stack spacing={1}>
                   <InputLabel htmlFor="company-signup">Company</InputLabel>
@@ -144,6 +179,27 @@ const AuthRegister = () => {
                   {touched.company && errors.company && (
                     <FormHelperText error id="helper-text-company-signup">
                       {errors.company}
+                    </FormHelperText>
+                  )}
+                </Stack>
+              </Grid>
+              <Grid item xs={12}>
+                <Stack spacing={1}>
+                  <InputLabel htmlFor="phonenumber">Phone Number</InputLabel>
+                  <OutlinedInput
+                    fullWidth
+                    error={Boolean(touched.phonenumber && errors.phonenumber)}
+                    id="phonenumber"
+                    value={values.phonenumber}
+                    name="phonenumber"
+                    onBlur={handleBlur}
+                    onChange={handleChange}
+                    placeholder="Phonenumber"
+                    inputProps={{}}
+                  />
+                  {touched.phonenumber && errors.phonenumber && (
+                    <FormHelperText error id="helper-text-phonenumber">
+                      {errors.phonenumber}
                     </FormHelperText>
                   )}
                 </Stack>
@@ -239,23 +295,37 @@ const AuthRegister = () => {
               )}
               <Grid item xs={12}>
                 <AnimateButton>
-                  <Button disableElevation disabled={isSubmitting} fullWidth size="large" type="submit" variant="contained" color="primary">
+                  <Button
+                    disableElevation
+                    disabled={isSubmitting}
+                    fullWidth
+                    size="large"
+                    type="submit"
+                    variant="contained"
+                    style={{ backgroundColor: '#47797e' }}
+                  >
                     Create Account
                   </Button>
                 </AnimateButton>
               </Grid>
               <Grid item xs={12}>
                 <Divider>
-                  <Typography variant="caption">Sign up with</Typography>
+                  <Typography
+                    component={Link}
+                    // to="#"
+                    onClick={handleNavigation}
+                    variant="body1"
+                    sx={{ textDecoration: 'none', cursor: 'pointer', color: 'primary' }}
+                  >
+                    Already have an account?
+                  </Typography>
                 </Divider>
-              </Grid>
-              <Grid item xs={12}>
-                <FirebaseSocial />
               </Grid>
             </Grid>
           </form>
         )}
       </Formik>
+      <ToastContainer />
     </>
   );
 };

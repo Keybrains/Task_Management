@@ -54,7 +54,7 @@ const UserProfile = () => {
     localStorage.removeItem('authToken');
 
     // Navigate to AdminLogin page
-    navigate('/userlogin');
+    navigate('/user/login');
   };
 
   const anchorRef = useRef(null);

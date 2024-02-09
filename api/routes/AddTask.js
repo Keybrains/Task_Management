@@ -68,7 +68,9 @@ router.get('/adminstasks/:adminId', async (req, res) => {
     if (userId) {
       query.userId = userId;
     }
-    const tasks = await Task.find(query);
+
+    const tasks = await Task.find(query).sort({ createAt: -1 });
+
     const tasksWithUserDetails = await Promise.all(
       tasks.map(async (task) => {
         const user = await User.findOne({ user_id: task.userId });
@@ -96,7 +98,7 @@ router.get('/userstasks/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
 
-    const tasks = await Task.find({ userId });
+    const tasks = await Task.find({ userId }).sort({ createAt: -1 });
 
     const tasksWithUserDetails = await Promise.all(
       tasks.map(async (task) => {
@@ -112,7 +114,8 @@ router.get('/userstasks/:userId', async (req, res) => {
           userFirstName: user ? user.firstname : 'N/A',
           userLastName: user ? user.lastname : 'N/A',
           projectId: task.projectId,
-          projectName: project ? project.projectName : 'N/A'
+          projectName: project ? project.projectName : 'N/A',
+          createAt: task.createAt
         };
       })
     );
@@ -128,13 +131,10 @@ router.get('/report/user/:userId', async (req, res) => {
   const { userId } = req.params;
 
   try {
-    // Fetch all tasks for the given userId
     const tasks = await Task.find({ userId });
 
-    // Optionally, format the tasks data as needed for the report
-    const reportData = tasks.map(task => {
+    const reportData = tasks.map((task) => {
       const { _id, formId, projectId, projectName, createAt, updateAt, formFields } = task;
-      // Add any additional formatting or data transformation for the report here
       return {
         taskId: _id,
         formId,
@@ -142,18 +142,15 @@ router.get('/report/user/:userId', async (req, res) => {
         projectName,
         createdAt: createAt,
         updatedAt: updateAt,
-        // Assuming formFields is an object and you want to include it directly
-        formFields,
+        formFields
       };
     });
 
-    // Respond with the report data
     res.status(200).json(reportData);
   } catch (error) {
     console.error('Error retrieving tasks report:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
-
 
 module.exports = router;

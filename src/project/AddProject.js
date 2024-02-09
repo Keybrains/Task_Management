@@ -14,10 +14,17 @@ import {
   Typography,
   MenuItem,
   Card,
-  CardContent
+  CardContent,
+  DialogContentText,
+  Select,
+  InputLabel,
+  FormControl
 } from '@mui/material';
 import 'react-toastify/dist/ReactToastify.css';
 import Loader from 'components/Loader';
+import { IconButton, Menu } from '@mui/material';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+
 const fullScreenLoaderStyle = {
   position: 'fixed',
   top: 0,
@@ -112,6 +119,91 @@ const AddProject = () => {
     const [year, month, day] = dateString.split('-');
     return `${day}-${month}-${year}`;
   };
+
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const handleMenuClick = (event, projectId) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedProjectId(projectId);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleOpenDeleteDialog = () => {
+    setOpenDeleteDialog(true);
+    handleMenuClose();
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+  };
+
+  const handleDeleteProject = async (projectId) => {
+    try {
+      await axiosInstance.delete(`/addprojects/deleteproject/${projectId}`);
+      toast.success('Project deleted successfully');
+      fetchProjects(); // Refresh the list of projects
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast.error('Error deleting project');
+    }
+    handleCloseDeleteDialog(); // Close the confirmation dialog
+  };
+
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [currentProject, setCurrentProject] = useState(null); // To store the project being edited
+
+  // Open edit dialog with project data
+  const handleOpenEditDialog = (project) => {
+    setFormData({
+      admin_id: loggedInUserId,
+      projectName: project.projectName,
+      projectShortName: project.projectShortName,
+      priority: project.priority,
+      description: project.description,
+      startDate: project.startDate,
+      endDate: project.endDate
+    });
+    setCurrentProject(project); // Set current project for editing
+    setOpenEditDialog(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    setOpenEditDialog(false);
+    setCurrentProject(null); // Reset current project
+    setFormData({
+      // Reset form data or adjust according to your needs
+      admin_id: loggedInUserId,
+      projectName: '',
+      projectShortName: '',
+      priority: '',
+      description: '',
+      startDate: '',
+      endDate: ''
+    });
+  };
+
+  const handleEditSave = async () => {
+    try {
+      await axiosInstance.put(`/addprojects/editproject/${currentProject.project_id}`, formData);
+      toast.success('Project updated successfully');
+      handleCloseEditDialog();
+      fetchProjects();
+    } catch (error) {
+      console.error('Error updating project:', error);
+      toast.error('Error updating project');
+    }
+  };
+  // const handleChange = (event) => {
+  //   const { name, value } = event.target;
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     [name]: value
+  //   }));
+  // };
 
   return (
     <>
@@ -243,11 +335,24 @@ const AddProject = () => {
                   <Grid item xs={12} sm={6} md={4} key={index}>
                     <Card style={getProjectCardStyle(project.priority)}>
                       <CardContent>
-                        {/* Project Name */}
-                        <Typography variant="h6" gutterBottom style={{ fontWeight: 'bold', color: '#4a90e2', letterSpacing: '0.5px' }}>
-                          {project.projectName}
-                        </Typography>
-
+                        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                          {/* Project Name */}
+                          <Typography variant="h6" gutterBottom style={{ fontWeight: 'bold', color: '#4a90e2', letterSpacing: '0.5px' }}>
+                            {project.projectName}
+                          </Typography>
+                          <IconButton
+                            aria-label="more"
+                            aria-controls="long-menu"
+                            aria-haspopup="true"
+                            onClick={(event) => handleMenuClick(event, project.project_id)} // Assume project._id is your identifier
+                          >
+                            <MoreVertIcon />
+                          </IconButton>
+                          <Menu id="simple-menu" anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={handleMenuClose}>
+                            <MenuItem onClick={() => handleOpenEditDialog(project)}>Edit</MenuItem>
+                            <MenuItem onClick={handleOpenDeleteDialog}>Delete</MenuItem>
+                          </Menu>
+                        </Box>
                         {/* Project Short Name */}
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
                           <ShortText style={{ marginRight: '4px' }} />
@@ -291,6 +396,134 @@ const AddProject = () => {
             </Grid>
           </Grid>
         </Grid>
+        <Dialog
+          open={openDeleteDialog}
+          onClose={handleCloseDeleteDialog}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">{'Confirm Deletion'}</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">Are you sure you want to delete this project?</DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDeleteDialog} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={() => handleDeleteProject(selectedProjectId)} color="primary" autoFocus>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog open={openEditDialog} onClose={handleCloseEditDialog} maxWidth="md" fullWidth>
+          <DialogTitle style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'rgba(255,255,255)', fontSize: '20px' }}>
+            Edit Project
+          </DialogTitle>
+          <DialogContent style={{ marginTop: '30px' }}>
+            <Box component="form" noValidate autoComplete="off">
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    autoFocus
+                    margin="dense"
+                    id="projectName"
+                    label="Project Name"
+                    type="text"
+                    fullWidth
+                    variant="outlined"
+                    value={formData.projectName}
+                    onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    margin="dense"
+                    id="projectShortName"
+                    label="Project Short Name"
+                    type="text"
+                    fullWidth
+                    variant="outlined"
+                    value={formData.projectShortName}
+                    onChange={(e) => setFormData({ ...formData, projectShortName: e.target.value })}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <FormControl fullWidth>
+                    <InputLabel id="priority-select-label">Priority</InputLabel>
+                    <Select
+                      labelId="priority-select-label"
+                      id="priority"
+                      name="priority"
+                      value={formData.priority}
+                      label="Priority"
+                      onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                    >
+                      <MenuItem value="low">Low</MenuItem>
+                      <MenuItem value="medium">Medium</MenuItem>
+                      <MenuItem value="high">High</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    margin="dense"
+                    id="description"
+                    label="Description"
+                    type="text"
+                    multiline
+                    rows={4}
+                    fullWidth
+                    variant="outlined"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    margin="dense"
+                    id="startDate"
+                    label="Start Date"
+                    type="date"
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{
+                      shrink: true
+                    }}
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    margin="dense"
+                    id="endDate"
+                    label="End Date"
+                    type="date"
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{
+                      shrink: true
+                    }}
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseEditDialog} color="secondary">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditSave}
+              style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'rgba(255,255,255)' }}
+            >
+              Save Changes
+            </Button>
+          </DialogActions>
+        </Dialog>
       </div>
     </>
   );

@@ -66,7 +66,9 @@ router.post('/addadmin', async (req, res) => {
 
 router.get('/getadmins', async (req, res) => {
   try {
-    const admins = await AddAdmin.find({}, '-password');
+    let admins = await AddAdmin.find({}, '-password');
+    // Reverse the order of the admins array
+    admins = admins.reverse();
     res.json({
       success: true,
       admins

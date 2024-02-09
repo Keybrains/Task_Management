@@ -36,7 +36,7 @@ export default function Page404() {
         <Button
           size="large"
           variant="contained"
-          onClick={() => navigate('/userlogin')} // Step 3: Use navigate to go to home
+          onClick={() => navigate('/admin/login')} // Step 3: Use navigate to go to home
         >
           Go to Home
         </Button>

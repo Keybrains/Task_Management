@@ -11,11 +11,11 @@ const SuperAuthRegister = Loadable(lazy(() => import('superadmin/pages/authentic
 // ==============================|| AUTH ROUTING ||============================== //
 
 const SuperAdminLoginRoutes = {
-  path: '/',
+  path: '/superadmin',
   element: <MinimalLayout />,
   children: [
     {
-      path: 'superadminlogin',
+      path: 'login',
       element: <SuperAuthLogin />
     },
     {

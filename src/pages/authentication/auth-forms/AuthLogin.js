@@ -2,7 +2,7 @@ import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { ToastContainer, toast } from 'react-toastify';
-import axiosInstance from 'superadmin/config/AxiosInstanceSuperAdmin';
+import axiosInstance from 'config/AxiosInstanceAdmin';
 // material-ui
 import {
   Button,
@@ -16,7 +16,8 @@ import {
   InputLabel,
   OutlinedInput,
   Stack,
-  Typography
+  Typography,
+  Divider
 } from '@mui/material';
 
 // third party
@@ -54,6 +55,7 @@ const AuthLogin = () => {
       throw new Error('Failed to decode token');
     }
   };
+
   const handleTokenDecoding = (token) => {
     localStorage.setItem('authToken', token);
     try {
@@ -68,7 +70,9 @@ const AuthLogin = () => {
       toast.error('Failed to decode token');
     }
   };
-
+  const handleNavigation = () => {
+    navigate('/admin/register');
+  };
   return (
     <>
       <ToastContainer
@@ -99,23 +103,20 @@ const AuthLogin = () => {
                 'Content-Type': 'application/json'
               }
             });
-
-            const token = response.data.token; // Assuming the token is present in the response data
-
-            // Store the token in local storage
-            localStorage.setItem('authToken', token);
-
-            // Decode and store the decoded token
-            handleTokenDecoding(token);
-
-            // Redirect to the dashboard
-            navigate('/admin/dashboard/default');
-
-            setStatus({ success: true });
+            const token = response.data.token;
+            const decoded = jwtDecode(token);
+            if (decoded.userId.status !== 'pending' && decoded.userId.status !== 'deactivate') {
+              localStorage.setItem('authToken', token);
+              handleTokenDecoding(token);
+              navigate('/admin/dashboard/default');
+              setStatus({ success: true });
+            } else {
+              setStatus({ success: false });
+              setErrors({ submit: 'Your account is not active. Please contact the administrator.' });
+            }
             setSubmitting(false);
           } catch (err) {
             console.error('Login failed:', err);
-
             setStatus({ success: false });
             setErrors({ submit: 'Login failed. Please check your credentials.' });
             setSubmitting(false);
@@ -214,12 +215,25 @@ const AuthLogin = () => {
                     size="large"
                     type="submit"
                     variant="contained"
-                    style={{ backgroundColor: '#47797e' }}
+                    style={{ backgroundColor: '#47797e', marginBottom: '20px' }}
                   >
                     Login
                   </Button>
                 </AnimateButton>
               </Grid>
+            </Grid>
+            <Grid item xs={12}>
+              <Divider>
+                <Typography
+                  component={Link}
+                  // to="#"
+                  onClick={handleNavigation}
+                  variant="body1"
+                  sx={{ textDecoration: 'none', cursor: 'pointer', color: 'primary' }}
+                >
+                  Dont have an account?
+                </Typography>
+              </Divider>
             </Grid>
           </form>
         )}

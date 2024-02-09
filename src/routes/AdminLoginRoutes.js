@@ -11,15 +11,15 @@ const AdminAuthRegister = Loadable(lazy(() => import('pages/authentication/Regis
 // ==============================|| AUTH ROUTING ||============================== //
 
 const AdminLoginRoutes = {
-  path: '/',
+  path: '/admin',
   element: <MinimalLayout />,
   children: [
     {
-      path: 'adminlogin',
+      path: 'login',
       element: <AdminAuthLogin />
     },
     {
-      path: 'adminregister',
+      path: 'register',
       element: <AdminAuthRegister />
     }
   ]

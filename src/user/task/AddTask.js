@@ -326,6 +326,24 @@ const AddTask = () => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  //filter report data using date
+  const [filterstartDate, setFilterStartDate] = useState('');
+  const [filterendDate, setFilterEndDate] = useState('');
+
+  const filteredTasksByDateRange = tasks.filter((task) => {
+    const taskDate = new Date(task.createAt);
+    const start = filterstartDate ? new Date(filterstartDate) : null;
+    const end = filterendDate ? new Date(filterendDate) : null;
+    if (start) start.setHours(0, 0, 0, 0);
+    if (end) end.setHours(23, 59, 59, 999);
+
+    return (!start || taskDate >= start) && (!end || taskDate <= end);
+  });
 
   return (
     <>
@@ -335,14 +353,17 @@ const AddTask = () => {
         </div>
       )}
       <div style={loading ? { display: 'none' } : {}}>
-        <Grid container spacing={3} style={{ paddingTop: '15px' }}>
-          <Grid item xs={12}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="h4" gutterBottom>
-                All Task
-              </Typography>
+        <Grid container spacing={3} alignItems="center" justifyContent="space-between" style={{ paddingTop: '125px' }}>
+          <Grid item xs={12} md={4}>
+            <Typography variant="h4" gutterBottom>
+              All Tasks
+            </Typography>
+          </Grid>
+          <Grid item container xs={12} md={8} spacing={3} justifyContent="flex-end">
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <TextField
                 select
+                fullWidth
                 style={{ minWidth: '200px', marginRight: '10px' }}
                 label="Select Project"
                 variant="outlined"
@@ -365,9 +386,12 @@ const AddTask = () => {
                   <MenuItem disabled>No projects available</MenuItem>
                 )}
               </TextField>
+            </Grid>
 
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <TextField
                 select
+                fullWidth
                 style={{ minWidth: '200px' }}
                 label="Select Form"
                 variant="outlined"
@@ -388,157 +412,201 @@ const AddTask = () => {
                   <MenuItem disabled>No forms available</MenuItem>
                 )}
               </TextField>
-              <Button variant="contained" style={{ backgroundColor: 'rgba(60,62,75, 1)' }} onClick={handleOpenDialog}>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4} lg={3}>
+              <Button variant="contained" style={{ backgroundColor: 'rgba(60,62,75, 1)' }} onClick={handleOpenDialog} fullWidth>
                 Add Report
               </Button>
-
-              <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
-                <DialogTitle style={{ backgroundColor: 'rgba(60,62,75, 1)', color: '#fff' }}>Add New Task</DialogTitle>
-                <DialogContent>
-                  <form>
-                    <TextField
-                      select
-                      style={{ marginTop: '30px' }}
-                      fullWidth
-                      label="Select Project"
-                      variant="outlined"
-                      name="projectId"
-                      value={selectedProject || ''}
-                      onChange={(event) => {
-                        setSelectedProject(event.target.value);
-                        setSelectedForm(null);
-                        setFormFields({});
-                      }}
-                    >
-                      {projects.length > 0 ? (
-                        projects.map((project) => (
-                          <MenuItem key={project.project_id} value={project.project_id}>
-                            {project.projectName}
-                          </MenuItem>
-                        ))
-                      ) : (
-                        <MenuItem disabled>No projects available</MenuItem>
-                      )}
-                    </TextField>
-                    <TextField
-                      select
-                      style={{ marginTop: '30px' }}
-                      fullWidth
-                      label="Select Form"
-                      variant="outlined"
-                      name="formId"
-                      value={selectedForm?.form_id || ''}
-                      onChange={handleFormChange}
-                    >
-                      {forms.length > 0 ? (
-                        forms.map((form) => (
-                          <MenuItem key={form.form_id} value={form.form_id}>
-                            {form.formName}
-                          </MenuItem>
-                        ))
-                      ) : (
-                        <MenuItem disabled>No forms available</MenuItem>
-                      )}
-                    </TextField>
-                    {renderFormFields()}
-                  </form>
-                </DialogContent>
-                <DialogActions>
-                  <Button onClick={handleCloseDialog} color="secondary">
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSaveTask} style={{ backgroundColor: 'rgba(60,62,75, 1)', color: '#fff' }} disabled={loading}>
-                    {loading ? <CircularProgress size={24} /> : 'Save Task'}
-                  </Button>
-                </DialogActions>
-              </Dialog>
-            </Box>
+            </Grid>
           </Grid>
-          <Grid item xs={12}>
-            {tasks && tasks.length > 0 ? (
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      {uniqueFormFields.map((field) => (
-                        <TableCell style={{ backgroundColor: 'rgba(60,62,75, 1)', color: 'white' }} key={field}>
-                          {field}
-                        </TableCell>
-                      ))}
-                      <TableCell style={{ backgroundColor: 'rgba(60,62,75, 1)', color: 'white' }}>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {tasks.map((task) => (
-                      <TableRow key={task._id}>
-                        {uniqueFormFields.map((field) => (
-                          <TableCell key={field}>
-                            {Array.isArray(task.formFields[field]) ? task.formFields[field].join(', ') : task.formFields[field] || 'N/A'}
-                          </TableCell>
-                        ))}
-                        <TableCell>
-                          <IconButton onClick={() => handleDeleteTask(task._id)}>
-                            <DeleteIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <TablePagination
-                  component="div"
-                  count={tasks.length}
-                  rowsPerPage={rowsPerPage}
-                  page={page}
-                  onPageChange={handleChangePage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  rowsPerPageOptions={[5, 10, 15, 25, { label: 'All', value: -1 }]}
-                  labelRowsPerPage="Rows per page:"
-                  labelDisplayedRows={({ from, to, count }) => (
-                    <div style={{ fontSize: '14px', fontStyle: 'italic', marginTop: '5px' }}>
-                      Showing {from}-{to} of {count !== -1 ? count : 'more than'}
-                    </div>
+          <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
+            <DialogTitle style={{ backgroundColor: 'rgba(60,62,75, 1)', color: '#fff' }}>Add New Task</DialogTitle>
+            <DialogContent>
+              <form>
+                <TextField
+                  select
+                  style={{ marginTop: '30px' }}
+                  fullWidth
+                  label="Select Project"
+                  variant="outlined"
+                  name="projectId"
+                  value={selectedProject || ''}
+                  onChange={(event) => {
+                    setSelectedProject(event.target.value);
+                    setSelectedForm(null);
+                    setFormFields({});
+                  }}
+                >
+                  {projects.length > 0 ? (
+                    projects.map((project) => (
+                      <MenuItem key={project.project_id} value={project.project_id}>
+                        {project.projectName}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>No projects available</MenuItem>
                   )}
-                  SelectProps={{
-                    style: { marginBottom: '0px' },
-                    renderValue: (value) => `${value} rows`
-                  }}
-                  nextIconButtonProps={{
-                    style: {
-                      marginBottom: '0px'
-                    }
-                  }}
-                  backIconButtonProps={{
-                    style: {
-                      marginBottom: '0px'
-                    }
-                  }}
-                />
-              </TableContainer>
-            ) : tasks && tasks.length === 0 ? (
-              <Typography variant="body1" style={{ paddingTop: '15px', fontWeight: 'bold' }}>
-                No tasks available.
-              </Typography>
-            ) : (
-              <Typography variant="body1" style={{ paddingTop: '15px', fontWeight: 'bold' }}>
-                Please select the project and form to display tasks.
-              </Typography>
-            )}
-          </Grid>
-          <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogContent>Are you sure you want to delete the task</DialogContent>
+                </TextField>
+                <TextField
+                  select
+                  style={{ marginTop: '30px' }}
+                  fullWidth
+                  label="Select Form"
+                  variant="outlined"
+                  name="formId"
+                  value={selectedForm?.form_id || ''}
+                  onChange={handleFormChange}
+                >
+                  {forms.length > 0 ? (
+                    forms.map((form) => (
+                      <MenuItem key={form.form_id} value={form.form_id}>
+                        {form.formName}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>No forms available</MenuItem>
+                  )}
+                </TextField>
+                {renderFormFields()}
+              </form>
+            </DialogContent>
             <DialogActions>
-              <Button onClick={handleCloseDeleteDialog} color="primary">
+              <Button onClick={handleCloseDialog} color="secondary">
                 Cancel
               </Button>
-              <Button onClick={handleConfirmDelete} color="error">
-                Delete
+              <Button onClick={handleSaveTask} style={{ backgroundColor: 'rgba(60,62,75, 1)', color: '#fff' }} disabled={loading}>
+                {loading ? <CircularProgress size={24} /> : 'Save Task'}
               </Button>
             </DialogActions>
           </Dialog>
-          <ToastContainer />
         </Grid>
+        <Grid container spacing={3} alignItems="center" style={{ paddingTop: '25px' }}>
+          <Grid item xs={12}>
+            {selectedTaskProject && selectedTaskForm ? (
+              tasks.length > 0 ? (
+                <>
+                  <Grid item xs={12} sm={6} md={4} lg={3}>
+                    <Box display="flex" flexDirection="row" justifyContent="space-between" style={{ marginTop: '25px', width: '100%' }}>
+                      <Box flexGrow={1} marginRight={2}>
+                        <TextField
+                          label="From"
+                          type="date"
+                          fullWidth
+                          InputLabelProps={{ shrink: true }}
+                          value={filterstartDate}
+                          onChange={(e) => setFilterStartDate(e.target.value)}
+                        />
+                      </Box>
+                      <Box flexGrow={1}>
+                        <TextField
+                          label="To"
+                          type="date"
+                          fullWidth
+                          InputLabelProps={{ shrink: true }}
+                          value={filterendDate}
+                          onChange={(e) => setFilterEndDate(e.target.value)}
+                        />
+                      </Box>
+                    </Box>
+                  </Grid>
+                  <TableContainer container component={Paper} style={{ marginTop: '10px' }}>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell style={{ backgroundColor: 'rgba(60,62,75, 1)', color: 'white' }}>Created On</TableCell>
+                          {uniqueFormFields.map((field) => (
+                            <TableCell key={field} style={{ backgroundColor: 'rgba(60,62,75, 1)', color: 'white' }}>
+                              {field}
+                            </TableCell>
+                          ))}
+                          <TableCell style={{ backgroundColor: 'rgba(60,62,75, 1)', color: 'white' }}>Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {filteredTasksByDateRange.length > 0 ? (
+                          filteredTasksByDateRange.map((task) => (
+                            <TableRow key={task._id}>
+                              <TableCell>{formatDate(task.createAt)}</TableCell>
+                              {uniqueFormFields.map((field) => (
+                                <TableCell key={`${task._id}-${field}`}>
+                                  {Array.isArray(task.formFields[field])
+                                    ? task.formFields[field].join(', ')
+                                    : task.formFields[field] || 'N/A'}
+                                </TableCell>
+                              ))}
+                              <TableCell>
+                                <IconButton onClick={() => handleDeleteTask(task._id)}>
+                                  <DeleteIcon />
+                                </IconButton>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={uniqueFormFields.length + 2} align="center">
+                              No tasks available
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                    <TablePagination
+                      component="div"
+                      count={filteredTasksByDateRange.length}
+                      rowsPerPage={rowsPerPage}
+                      page={page}
+                      onPageChange={handleChangePage}
+                      onRowsPerPageChange={handleChangeRowsPerPage}
+                      rowsPerPageOptions={[5, 10, 15, 25, { label: 'All', value: -1 }]}
+                      labelRowsPerPage="Rows per page:"
+                      labelDisplayedRows={({ from, to, count }) => (
+                        <div style={{ fontSize: '14px', fontStyle: 'italic', marginTop: '5px' }}>
+                          Showing {from}-{to} of {count !== -1 ? count : 'more than'}
+                        </div>
+                      )}
+                      SelectProps={{
+                        style: { marginBottom: '0px' },
+                        renderValue: (value) => `${value} rows`
+                      }}
+                      nextIconButtonProps={{
+                        style: {
+                          marginBottom: '0px'
+                        }
+                      }}
+                      backIconButtonProps={{
+                        style: {
+                          marginBottom: '0px'
+                        }
+                      }}
+                    />
+                  </TableContainer>
+                </>
+              ) : (
+                <Typography variant="body1" style={{ paddingTop: '15px', fontWeight: 'bold' }}>
+                  No reports available for the selected project and form.
+                </Typography>
+              )
+            ) : (
+              <Typography variant="body1" style={{ paddingTop: '15px', fontWeight: 'bold' }}>
+                Please select a project and form to display reports.
+              </Typography>
+            )}
+          </Grid>
+        </Grid>
+        <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
+          <DialogTitle>Confirm Deletion</DialogTitle>
+          <DialogContent>Are you sure you want to delete the task</DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDeleteDialog} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmDelete} color="error">
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <ToastContainer />
       </div>
     </>
   );

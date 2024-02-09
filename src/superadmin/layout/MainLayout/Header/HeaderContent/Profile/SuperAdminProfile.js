@@ -50,7 +50,7 @@ const SuperAdminProfile = () => {
     localStorage.removeItem('authToken');
 
     // Navigate to AdminLogin page
-    navigate('/superadminlogin');
+    navigate('/superadmin/login');
   };
 
   const anchorRef = useRef(null);

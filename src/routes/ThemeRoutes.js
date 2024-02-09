@@ -14,14 +14,14 @@ import Page404 from 'page404/Page404'; // Adjust the import path as necessary
 
 const ThemeRoutes = () => {
   return useRoutes([
-    { path: '/', element: <Redirect to="/userlogin" /> },
+    { path: '/', element: <Redirect to="/admin/login" /> },
     AdminMainRoutes,
     AdminLoginRoutes,
     SuperAdminMainRoutes,
     SuperLoginRoutes,
     UserLoginRoutes,
     UserMainRoutes,
-    { path: '*', element: <Page404 /> },
+    { path: '*', element: <Page404 /> }
   ]);
 };
 

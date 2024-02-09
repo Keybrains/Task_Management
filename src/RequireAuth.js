@@ -10,11 +10,11 @@ const RequireAuth = ({ children }) => {
   if (!isAuth) {
     // Redirect to specific login based on the attempted path
     if (location.pathname.startsWith('/admin')) {
-      return <Navigate to="/adminlogin" />;
+      return <Navigate to="/admin/login" />;
     } else if (location.pathname.startsWith('/superadmin')) {
-      return <Navigate to="/superadminlogin" />;
+      return <Navigate to="/superadmin/login" />;
     } else {
-      return <Navigate to="/userlogin" />;
+      return <Navigate to="user/login" />;
     }
   }
 

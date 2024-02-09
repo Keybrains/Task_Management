@@ -12,7 +12,8 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TablePagination
+  TablePagination,
+  Box
 } from '@mui/material';
 import * as XLSX from 'xlsx';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
@@ -25,15 +26,14 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { CloudDownload as CloudDownloadIcon, Clear as ClearIcon, DateRange as DateRangeIcon } from '@material-ui/icons';
 
-// Custom styles to enhance the look
 const useStyles = makeStyles((theme) => ({
   dialogTitle: {
     backgroundColor: 'rgba(71, 121, 126, 1)',
     color: 'rgba(255,255,255)'
   },
   dialogCustom: {
-    width: '40%', // Custom width
-    height: '50%' // Custom maximum height
+    width: '40%',
+    height: '50%'
   },
   dialogContent: {
     marginTop: theme.spacing(2)
@@ -216,7 +216,7 @@ const Reports = () => {
 
   const downloadExcel = (filteredTasksByForm, uniqueFormFields) => {
     const wb = XLSX.utils.book_new();
-    const headers = ['Create At', 'User Name', ...uniqueFormFields];
+    const headers = ['Create On', 'User Name', ...uniqueFormFields];
     const ws_data = [headers];
     filteredTasksByForm.forEach((task) => {
       const row = [
@@ -242,6 +242,21 @@ const Reports = () => {
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   };
   const classes = useStyles();
+
+  //filter report data using date
+  const [filterstartDate, setFilterStartDate] = useState('');
+  const [filterendDate, setFilterEndDate] = useState('');
+
+  const filteredTasksByDateRange = filteredTasksByForm.filter((task) => {
+    const taskDate = new Date(task.createAt);
+    const start = filterstartDate ? new Date(filterstartDate) : null;
+    const end = filterendDate ? new Date(filterendDate) : null;
+    if (start) start.setHours(0, 0, 0, 0);
+    if (end) end.setHours(23, 59, 59, 999);
+
+    return (!start || taskDate >= start) && (!end || taskDate <= end);
+  });
+
   return (
     <>
       {loading && (
@@ -335,77 +350,104 @@ const Reports = () => {
           <Grid item xs={12}>
             {selectedTaskProject && selectedTaskForm ? (
               tasks.length > 0 ? (
-                <TableContainer component={Paper}>
-                  <>
-                    <Table>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>Create At</TableCell>
-                          {uniqueFormFields.map((field) => (
-                            <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }} key={field}>
-                              {field}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {filteredTasksByForm.length > 0 ? (
-                          filteredTasksByForm.map((task) => (
-                            <TableRow key={task.taskId}>
-                              <TableCell>{formatDate(task.createAt)}</TableCell>
-                              {uniqueFormFields.map((field) => (
-                                <TableCell key={field}>
-                                  {Array.isArray(task.formFields[field])
-                                    ? task.formFields[field].join(', ')
-                                    : task.formFields[field] || 'N/A'}
-                                </TableCell>
-                              ))}
-                            </TableRow>
-                          ))
-                        ) : (
+                <>
+                  <Grid item xs={12} sm={6} md={4} lg={3}>
+                    <Box display="flex" flexDirection="row" justifyContent="space-between" style={{ marginTop: '25px' }}>
+                      {/* Adjust the flex properties as needed */}
+                      <Box flexGrow={1} marginRight={2}>
+                        <TextField
+                          label="From"
+                          type="date"
+                          fullWidth
+                          InputLabelProps={{ shrink: true }}
+                          value={filterstartDate}
+                          onChange={(e) => setFilterStartDate(e.target.value)}
+                        />
+                      </Box>
+                      <Box flexGrow={1}>
+                        <TextField
+                          label="To"
+                          type="date"
+                          fullWidth
+                          InputLabelProps={{ shrink: true }}
+                          value={filterendDate}
+                          onChange={(e) => setFilterEndDate(e.target.value)}
+                        />
+                      </Box>
+                    </Box>
+                  </Grid>
+                  <TableContainer component={Paper} style={{ marginTop: '10px' }}>
+                    <>
+                      <Table>
+                        <TableHead>
                           <TableRow>
-                            <TableCell colSpan={uniqueFormFields.length + 1} align="center">
-                              No task available
-                            </TableCell>
+                            <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>Create On</TableCell>
+                            {uniqueFormFields.map((field) => (
+                              <TableCell style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }} key={field}>
+                                {field}
+                              </TableCell>
+                            ))}
                           </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
+                        </TableHead>
+                        <TableBody>
+                          {filteredTasksByDateRange.length > 0 ? (
+                            filteredTasksByDateRange.map((task) => (
+                              <TableRow key={task.taskId}>
+                                <TableCell>{formatDate(task.createAt)}</TableCell>
+                                {uniqueFormFields.map((field) => (
+                                  <TableCell key={field}>
+                                    {Array.isArray(task.formFields[field])
+                                      ? task.formFields[field].join(', ')
+                                      : task.formFields[field] || 'N/A'}
+                                  </TableCell>
+                                ))}
+                              </TableRow>
+                            ))
+                          ) : (
+                            <TableRow>
+                              <TableCell colSpan={uniqueFormFields.length + 1} align="center">
+                                No task available
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px' }}>
-                      <div style={{ display: 'flex' }}>
-                        <FileDownloadIcon onClick={handleOpenDownloadDialog} style={{ cursor: 'pointer', marginRight: '10px' }} />
-                        <Typography variant="subtitle1">Download Reports</Typography>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px' }}>
+                        <div style={{ display: 'flex' }}>
+                          <FileDownloadIcon onClick={handleOpenDownloadDialog} style={{ cursor: 'pointer', marginRight: '10px' }} />
+                          <Typography variant="subtitle1">Download Reports</Typography>
+                        </div>
+                        <TablePagination
+                          component="div"
+                          count={filteredTasksByDateRange.length}
+                          rowsPerPage={rowsPerPage}
+                          page={page}
+                          onPageChange={handleChangePage}
+                          onRowsPerPageChange={handleChangeRowsPerPage}
+                          rowsPerPageOptions={[5, 10, 15, 25, { label: 'All', value: -1 }]}
+                          labelRowsPerPage="Rows per page:"
+                          labelDisplayedRows={({ from, to, count }) => `${from}-${to} of ${count !== -1 ? count : 'more than'}`}
+                          SelectProps={{
+                            style: { marginBottom: '0px' },
+                            renderValue: (value) => `${value} rows`
+                          }}
+                          nextIconButtonProps={{
+                            style: {
+                              marginBottom: '0px'
+                            }
+                          }}
+                          backIconButtonProps={{
+                            style: {
+                              marginBottom: '0px'
+                            }
+                          }}
+                          style={{ marginRight: '10px' }}
+                        />
                       </div>
-                      <TablePagination
-                        component="div"
-                        count={filteredTasksByForm.length}
-                        rowsPerPage={rowsPerPage}
-                        page={page}
-                        onPageChange={handleChangePage}
-                        onRowsPerPageChange={handleChangeRowsPerPage}
-                        rowsPerPageOptions={[5, 10, 15, 25, { label: 'All', value: -1 }]}
-                        labelRowsPerPage="Rows per page:"
-                        labelDisplayedRows={({ from, to, count }) => `${from}-${to} of ${count !== -1 ? count : 'more than'}`}
-                        SelectProps={{
-                          style: { marginBottom: '0px' },
-                          renderValue: (value) => `${value} rows`
-                        }}
-                        nextIconButtonProps={{
-                          style: {
-                            marginBottom: '0px'
-                          }
-                        }}
-                        backIconButtonProps={{
-                          style: {
-                            marginBottom: '0px'
-                          }
-                        }}
-                        style={{ marginRight: '10px' }}
-                      />
-                    </div>
-                  </>
-                </TableContainer>
+                    </>
+                  </TableContainer>
+                </>
               ) : (
                 <Typography variant="body1" style={{ paddingTop: '15px', fontWeight: 'bold' }}>
                   No reports available for the selected project and form.

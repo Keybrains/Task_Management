@@ -86,13 +86,16 @@ router.get('/getusers', async (req, res) => {
 router.get('/getuserbyadmin/:adminId', async (req, res) => {
   try {
     const adminId = req.params.adminId;
-    const users = await AddUser.find({ admin_id: adminId }, '-password');
+    let users = await AddUser.find({ admin_id: adminId }, '-password');
     if (users.length === 0) {
       return res.status(404).json({
         success: false,
         message: 'No users found for this admin'
       });
     }
+
+    // Reverse the users array
+    users = users.reverse();
 
     res.json({
       success: true,

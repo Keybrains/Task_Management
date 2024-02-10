@@ -21,25 +21,18 @@ const DashboardDefault = () => {
 
   useEffect(() => {
     if (adminId) {
-      // Adjusted the request URL to match the new route structure
       const requestUrl = `/counts/allcounts/${adminId}`;
-      console.log(`Making request for adminId: ${adminId}`);
-      console.log(`Request URL: ${requestUrl}`);
-
       axiosInstance
         .get(requestUrl)
         .then((response) => {
           const data = response.data;
           if (data.success && data.counts) {
             setCounts(data.counts);
-            console.log('Counts received:', data.counts);
           }
         })
         .catch((error) => console.error('Error fetching counts:', error));
-    } else {
-      console.log('Admin ID not found');
     }
-  }, [adminId]); // Assuming adminId is a state or prop that could change
+  }, [adminId]);
 
   return (
     <Grid container rowSpacing={4.5} columnSpacing={2.75}>

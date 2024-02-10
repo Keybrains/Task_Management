@@ -37,6 +37,7 @@ const fullScreenLoaderStyle = {
   backgroundColor: 'rgba(0, 0, 0, 0.5)',
   zIndex: 1500
 };
+
 const AddProject = () => {
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
@@ -83,12 +84,11 @@ const AddProject = () => {
     } catch (error) {
       console.error('Error fetching projects:', error);
       setLoading(false);
-      // toast.error('Error fetching projects');
     }
   };
   useEffect(() => {
     fetchProjects();
-  }, [loggedInUserId]); // Include loggedInUserId in the dependency array
+  }, [loggedInUserId]);
 
   const getColorForPriority = (priority) => {
     switch (priority) {
@@ -105,12 +105,12 @@ const AddProject = () => {
 
   const getProjectCardStyle = (priority) => ({
     margin: '10px',
-    backgroundColor: '#ffffff', // Light background
-    boxShadow: '0 4px 12px 0 rgba(0,0,0,0.15)', // Softer shadow
-    transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out', // Smooth transition for hover effect
+    backgroundColor: '#ffffff',
+    boxShadow: '0 4px 12px 0 rgba(0,0,0,0.15)',
+    transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
     '&:hover': {
-      transform: 'scale(1.03)', // Slightly enlarge on hover
-      boxShadow: '0 6px 16px 0 rgba(0,0,0,0.2)' // Increase shadow on hover
+      transform: 'scale(1.03)',
+      boxShadow: '0 6px 16px 0 rgba(0,0,0,0.2)'
     },
     borderTop: `4px solid ${getColorForPriority(priority)}`
   });
@@ -123,6 +123,7 @@ const AddProject = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
+
   const handleMenuClick = (event, projectId) => {
     setAnchorEl(event.currentTarget);
     setSelectedProjectId(projectId);
@@ -145,37 +146,40 @@ const AddProject = () => {
     try {
       await axiosInstance.delete(`/addprojects/deleteproject/${projectId}`);
       toast.success('Project deleted successfully');
-      fetchProjects(); // Refresh the list of projects
+      fetchProjects();
     } catch (error) {
       console.error('Error deleting project:', error);
       toast.error('Error deleting project');
     }
-    handleCloseDeleteDialog(); // Close the confirmation dialog
+    handleCloseDeleteDialog();
   };
 
   const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [currentProject, setCurrentProject] = useState(null); // To store the project being edited
+  const [currentProject, setCurrentProject] = useState(null);
 
-  // Open edit dialog with project data
-  const handleOpenEditDialog = (project) => {
-    setFormData({
-      admin_id: loggedInUserId,
-      projectName: project.projectName,
-      projectShortName: project.projectShortName,
-      priority: project.priority,
-      description: project.description,
-      startDate: project.startDate,
-      endDate: project.endDate
-    });
-    setCurrentProject(project); // Set current project for editing
-    setOpenEditDialog(true);
+  const handleOpenEditDialog = () => {
+    const projectToEdit = projects.find((project) => project.project_id === selectedProjectId);
+    if (projectToEdit) {
+      setCurrentProject(projectToEdit);
+      setFormData({
+        projectName: projectToEdit.projectName,
+        projectShortName: projectToEdit.projectShortName,
+        priority: projectToEdit.priority,
+        description: projectToEdit.description,
+        startDate: projectToEdit.startDate,
+        endDate: projectToEdit.endDate
+      });
+      setSelectedProjectId(selectedProjectId);
+      setOpenEditDialog(true);
+    } else {
+      console.error('Project not found!');
+    }
   };
 
   const handleCloseEditDialog = () => {
     setOpenEditDialog(false);
-    setCurrentProject(null); // Reset current project
+    setCurrentProject(null);
     setFormData({
-      // Reset form data or adjust according to your needs
       admin_id: loggedInUserId,
       projectName: '',
       projectShortName: '',
@@ -197,13 +201,6 @@ const AddProject = () => {
       toast.error('Error updating project');
     }
   };
-  // const handleChange = (event) => {
-  //   const { name, value } = event.target;
-  //   setFormData(prev => ({
-  //     ...prev,
-  //     [name]: value
-  //   }));
-  // };
 
   return (
     <>
@@ -336,7 +333,6 @@ const AddProject = () => {
                     <Card style={getProjectCardStyle(project.priority)}>
                       <CardContent>
                         <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                          {/* Project Name */}
                           <Typography variant="h6" gutterBottom style={{ fontWeight: 'bold', color: '#4a90e2', letterSpacing: '0.5px' }}>
                             {project.projectName}
                           </Typography>
@@ -349,33 +345,26 @@ const AddProject = () => {
                             <MoreVertIcon />
                           </IconButton>
                           <Menu id="simple-menu" anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                            <MenuItem onClick={() => handleOpenEditDialog(project)}>Edit</MenuItem>
+                            <MenuItem onClick={() => handleOpenEditDialog(project.project_id)}>Edit</MenuItem>
                             <MenuItem onClick={handleOpenDeleteDialog}>Delete</MenuItem>
                           </Menu>
                         </Box>
-                        {/* Project Short Name */}
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
                           <ShortText style={{ marginRight: '4px' }} />
                           <Typography variant="body1">{project.projectShortName}</Typography>
                         </div>
-
-                        {/* Project Priority */}
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
                           <Flag style={{ marginRight: '4px', color: getColorForPriority(project.priority) }} />
                           <Typography variant="body1" style={{ color: getColorForPriority(project.priority) }}>
                             {project.priority.charAt(0).toUpperCase() + project.priority.slice(1)}
                           </Typography>
                         </div>
-
-                        {/* Project Dates */}
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
                           <CalendarToday style={{ marginRight: '4px' }} />
                           <Typography variant="body1">
                             {formatDate(project.startDate)} - {formatDate(project.endDate)}
                           </Typography>
                         </div>
-
-                        {/* Project Description */}
                         <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '8px' }}>
                           <Description style={{ marginRight: '4px', marginTop: '4px' }} />
                           <Typography variant="body2" color="textSecondary" style={{ marginRight: '4px', marginTop: '10px' }}>
@@ -516,10 +505,7 @@ const AddProject = () => {
             <Button onClick={handleCloseEditDialog} color="secondary">
               Cancel
             </Button>
-            <Button
-              onClick={handleEditSave}
-              style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'rgba(255,255,255)' }}
-            >
+            <Button onClick={handleEditSave} style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'rgba(255,255,255)' }}>
               Save Changes
             </Button>
           </DialogActions>

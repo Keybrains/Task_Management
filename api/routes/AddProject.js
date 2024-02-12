@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const moment = require('moment');
 const AddProject = require('../models/Addproject');
-
+const AddUser = require('../models/AddUser');
 // post
 router.post('/addproject', async (req, res) => {
   try {
@@ -134,10 +134,6 @@ router.delete('/deleteproject/:projectId', async (req, res) => {
   try {
     const { projectId } = req.params;
 
-    // Ensure projectId is correctly parsed/validated if needed
-    // For instance, if project_id is supposed to be a number, ensure it's parsed as one
-    // const projectId = parseInt(req.params.projectId);
-
     const deletedProject = await AddProject.findOneAndDelete({ project_id: projectId });
 
     if (!deletedProject) {
@@ -160,5 +156,94 @@ router.delete('/deleteproject/:projectId', async (req, res) => {
   }
 });
 
+router.get('/projects-with-user/:adminId', async (req, res) => {
+  try {
+    const adminId = req.params.adminId;
+    let projects = await AddProject.find({ admin_id: adminId });
+
+    if (!projects || projects.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No projects found for the provided admin ID'
+      });
+    }
+
+    // Assuming projects are fetched correctly, now fetch users for each project
+    // This involves iterating over projects, fetching users associated with each project, and adding this info to the project object
+
+    const projectsWithUsers = await Promise.all(
+      projects.map(async (project) => {
+        // Find users associated with the current project
+        const users = await AddUser.find({ project_ids: project.project_id });
+
+        // Add user details to the project object
+        // Note: You might want to customize the user object to only include relevant information
+        return {
+          ...project.toObject(), // Convert document to object
+          users: users.map((user) => ({
+            user_id: user.user_id,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            email: user.email
+            // Add any other user fields you need
+          }))
+        };
+      })
+    );
+
+    // Reverse the projectsWithUsers array if necessary
+    // Note: It might be more efficient to sort in the query if your DB supports it
+    const reversedProjectsWithUsers = projectsWithUsers.reverse();
+
+    res.json({
+      success: true,
+      data: reversedProjectsWithUsers
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+});
+
+router.put('/update-project/:projectId', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const projectUpdates = req.body;
+
+    const updatedProject = await AddProject.findOneAndUpdate({ project_id: projectId }, { $set: projectUpdates }, { new: true });
+    if (!updatedProject) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found'
+      });
+    }
+
+    if (projectUpdates.project_id) {
+      const associatedUsers = await AddUser.find({ project_ids: projectId });
+
+      const updates = associatedUsers.map(async (user) => {
+        const updatedProjectIds = user.project_ids.map((pid) => (pid === projectId ? projectUpdates.project_id : pid));
+        return await AddUser.findByIdAndUpdate(user._id, { $set: { project_ids: updatedProjectIds } }, { new: true });
+      });
+
+      await Promise.all(updates);
+    }
+
+    res.json({
+      success: true,
+      message: 'Project updated successfully',
+      project: updatedProject
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+});
 
 module.exports = router;

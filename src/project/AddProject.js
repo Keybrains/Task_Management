@@ -18,13 +18,20 @@ import {
   DialogContentText,
   Select,
   InputLabel,
-  FormControl
+  FormControl,
+  ListItemText,
+  Checkbox,
+  ListItemIcon,
+  ListItem,
+  List
 } from '@mui/material';
+import { Avatar, Chip } from '@material-ui/core';
 import 'react-toastify/dist/ReactToastify.css';
 import Loader from 'components/Loader';
 import { IconButton, Menu } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-
+import PersonIcon from '@material-ui/icons/Person';
+// import EmailIcon from '@material-ui/icons/Email';
 const fullScreenLoaderStyle = {
   position: 'fixed',
   top: 0,
@@ -75,17 +82,21 @@ const AddProject = () => {
   };
 
   const [projects, setProjects] = useState([]);
-
   const fetchProjects = async () => {
     try {
-      const response = await axiosInstance.get(`/addprojects/projects/${loggedInUserId}`);
+      const response = await axiosInstance.get(`/addprojects/projects-with-user/${loggedInUserId}`);
       setProjects(response.data.data);
+      // response.data.data.forEach((project, index) => {
+      //   console.log(`Project ${index + 1} Users:`, project.users);
+      // });
+      console.log('response.data.data', response.data.data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching projects:', error);
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchProjects();
   }, [loggedInUserId]);
@@ -199,6 +210,73 @@ const AddProject = () => {
     } catch (error) {
       console.error('Error updating project:', error);
       toast.error('Error updating project');
+    }
+  };
+
+  const [allUsers, setAllUsers] = useState([]);
+  const [openUserAssignmentDialog, setOpenUserAssignmentDialog] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  console.log('selectedUsers', selectedUsers);
+  const fetchUsers = async () => {
+    try {
+      const response = await axiosInstance.get(`/addusers/getuserbyadmin/${loggedInUserId}`);
+      setAllUsers(response.data.users);
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleOpenUserAssignmentDialog = async (projectId) => {
+    const project = projects.find((project) => project.project_id === selectedProjectId);
+    console.log('project', project);
+    if (project) {
+      const associatedUserIds = project.users.map((user) => user.user_id);
+      setSelectedUsers(associatedUserIds);
+    }
+    setSelectedProjectId(projectId);
+    setOpenUserAssignmentDialog(true);
+    await fetchUsers();
+  };
+
+  const handleCloseUserAssignmentDialog = () => {
+    setOpenUserAssignmentDialog(false);
+  };
+
+  const handleSelectUser = (userId) => {
+    setSelectedUsers((prevSelected) => {
+      if (prevSelected.includes(userId)) {
+        return prevSelected.filter((id) => id !== userId);
+      } else {
+        return [...prevSelected, userId];
+      }
+    });
+  };
+
+  const handleSaveUserAssignments = async () => {
+    setOpenUserAssignmentDialog(false);
+
+    const updatePromises = selectedUsers.map((userId) => {
+      return axiosInstance.put(`addusers/updateuserprojects/${userId}`, {
+        project_ids: [selectedProjectId]
+      });
+    });
+
+    try {
+      const responses = await Promise.all(updatePromises);
+      responses.forEach((response, index) => {
+        console.log(`Response for user ${selectedUsers[index]}:`, response.data);
+      });
+      await fetchUsers();
+      console.log('User assignments updated successfully');
+    } catch (error) {
+      console.error('Error updating user assignments:', error);
     }
   };
 
@@ -340,12 +418,29 @@ const AddProject = () => {
                             aria-label="more"
                             aria-controls="long-menu"
                             aria-haspopup="true"
-                            onClick={(event) => handleMenuClick(event, project.project_id)} // Assume project._id is your identifier
+                            onClick={(event) => handleMenuClick(event, project.project_id)}
                           >
                             <MoreVertIcon />
                           </IconButton>
                           <Menu id="simple-menu" anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                            <MenuItem onClick={() => handleOpenEditDialog(project.project_id)}>Edit</MenuItem>
+                            <MenuItem
+                              onClick={() => {
+                                console.log('Menu item project ID:', project.project_id);
+                                handleOpenEditDialog(project.project_id);
+                              }}
+                            >
+                              Edit
+                            </MenuItem>
+
+                            <MenuItem
+                              onClick={() => {
+                                console.log('Menu item project ID:', project.project_id);
+                                handleOpenUserAssignmentDialog(project.project_id);
+                              }}
+                            >
+                              Manage User
+                            </MenuItem>
+
                             <MenuItem onClick={handleOpenDeleteDialog}>Delete</MenuItem>
                           </Menu>
                         </Box>
@@ -371,6 +466,29 @@ const AddProject = () => {
                             {project.description}
                           </Typography>
                         </div>
+                        {project.users && project.users.length > 0 && (
+                          <div style={{ marginTop: '16px' }}>
+                            <Typography variant="subtitle2" gutterBottom>
+                              Associated Users:
+                            </Typography>
+                            {project.users.map((user, userIndex) => (
+                              <Chip
+                                key={userIndex}
+                                avatar={
+                                  <Avatar>
+                                    <PersonIcon />
+                                  </Avatar>
+                                }
+                                label={`${user.firstname} ${user.lastname}`}
+                                variant="outlined"
+                                color="primary"
+                                size="small"
+                                // icon={<EmailIcon />}
+                                style={{ padding: '15px' }}
+                              />
+                            ))}
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </Grid>
@@ -507,6 +625,29 @@ const AddProject = () => {
             </Button>
             <Button onClick={handleEditSave} style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'rgba(255,255,255)' }}>
               Save Changes
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog open={openUserAssignmentDialog} onClose={handleCloseUserAssignmentDialog}>
+          <DialogTitle>Assign Users</DialogTitle>
+          <DialogContent>
+            <List>
+              {allUsers.map((user) => (
+                <ListItem key={user.user_id} button onClick={() => handleSelectUser(user.user_id)}>
+                  <ListItemIcon>
+                    <Checkbox edge="start" checked={selectedUsers.includes(user.user_id)} tabIndex={-1} disableRipple />
+                  </ListItemIcon>
+                  <ListItemText primary={`${user.firstname} ${user.lastname}`} />
+                </ListItem>
+              ))}
+            </List>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseUserAssignmentDialog} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={handleSaveUserAssignments} color="primary">
+              Save
             </Button>
           </DialogActions>
         </Dialog>

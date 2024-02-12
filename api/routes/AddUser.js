@@ -268,4 +268,51 @@ router.get('/getprojects/:userId', async (req, res) => {
   }
 });
 
+router.put('/updateuserprojects/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { project_ids } = req.body; // Expecting an array of project IDs to update
+
+  try {
+    // Validate project_ids is an array
+    if (!Array.isArray(project_ids)) {
+      return res.status(400).json({
+        success: false,
+        message: 'project_ids must be an array'
+      });
+    }
+
+    // Find the user by user_id and add new project IDs to their project_ids array
+    const updatedUser = await AddUser.findOneAndUpdate(
+      { user_id: userId },
+      { 
+        $addToSet: { 
+          project_ids: { $each: project_ids } 
+        } 
+      },
+      { new: true, returnDocument: 'after' } // Ensure the updated document is returned
+    ).select('-password'); // Exclude the password field from the result
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'User projects updated successfully',
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+});
+
+
+
 module.exports = router;

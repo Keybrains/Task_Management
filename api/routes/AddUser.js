@@ -37,13 +37,14 @@ router.post('/adduser', async (req, res) => {
     const updateTime = (req.body['updateAt'] = moment().format('YYYY-MM-DD HH:mm:ss'));
     const hashedPassword = await hashPassword(req.body.password);
     const { project_ids } = req.body;
+    const { projectNames } = req.body;
     const newUser = new AddUser({
       firstname: req.body.firstname,
       lastname: req.body.lastname,
       companyname: req.body.companyname,
       email: req.body.email,
       phonenumber: req.body.phonenumber,
-      projectName: req.body.projectName,
+      projectNames: projectNames || [],
       project_ids: project_ids || [],
       admin_id: req.body.admin_id,
       password: hashedPassword,
@@ -270,35 +271,57 @@ router.get('/getprojects/:userId', async (req, res) => {
 
 router.put('/updateuserprojects/:userId', async (req, res) => {
   const { userId } = req.params;
-  const { project_ids } = req.body; // Expecting an array of project IDs to update
+  const { addProjectIds, removeProjectIds } = req.body;
 
   try {
-    // Validate project_ids is an array
-    if (!Array.isArray(project_ids)) {
+    if (!Array.isArray(addProjectIds) || !Array.isArray(removeProjectIds)) {
       return res.status(400).json({
         success: false,
-        message: 'project_ids must be an array'
+        message: 'Both addProjectIds and removeProjectIds must be arrays'
       });
     }
 
-    // Find the user by user_id and add new project IDs to their project_ids array
-    const updatedUser = await AddUser.findOneAndUpdate(
-      { user_id: userId },
-      { 
-        $addToSet: { 
-          project_ids: { $each: project_ids } 
-        } 
-      },
-      { new: true, returnDocument: 'after' } // Ensure the updated document is returned
-    ).select('-password'); // Exclude the password field from the result
+    const projectsToAdd = await AddProject.find({
+      project_id: { $in: addProjectIds }
+    });
 
-    if (!updatedUser) {
+    const projectNamesToAdd = projectsToAdd.map((project) => project.projectName);
+
+    if (addProjectIds.length > 0) {
+      await AddUser.findOneAndUpdate(
+        { user_id: userId },
+        {
+          $addToSet: {
+            project_ids: { $each: addProjectIds },
+            projectNames: { $each: projectNamesToAdd }
+          }
+        },
+        { new: true }
+      );
+    }
+
+    const user = await AddUser.findOne({ user_id: userId });
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
 
+    const namesToRemove = user.projectNames.filter((_, index) => removeProjectIds.includes(user.project_ids[index]));
+
+    if (removeProjectIds.length > 0) {
+      await AddUser.findOneAndUpdate(
+        { user_id: userId },
+        {
+          $pullAll: { project_ids: removeProjectIds },
+          $pull: { projectNames: { $in: namesToRemove } }
+        },
+        { new: true }
+      );
+    }
+
+    const updatedUser = await AddUser.findOne({ user_id: userId }).select('-password');
     res.json({
       success: true,
       message: 'User projects updated successfully',
@@ -312,7 +335,5 @@ router.put('/updateuserprojects/:userId', async (req, res) => {
     });
   }
 });
-
-
 
 module.exports = router;

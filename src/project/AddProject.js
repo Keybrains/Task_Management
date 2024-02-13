@@ -86,9 +86,6 @@ const AddProject = () => {
     try {
       const response = await axiosInstance.get(`/addprojects/projects-with-user/${loggedInUserId}`);
       setProjects(response.data.data);
-      // response.data.data.forEach((project, index) => {
-      //   console.log(`Project ${index + 1} Users:`, project.users);
-      // });
       console.log('response.data.data', response.data.data);
       setLoading(false);
     } catch (error) {
@@ -168,8 +165,8 @@ const AddProject = () => {
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [currentProject, setCurrentProject] = useState(null);
 
-  const handleOpenEditDialog = () => {
-    const projectToEdit = projects.find((project) => project.project_id === selectedProjectId);
+  const handleOpenEditDialog = (projectId) => {
+    const projectToEdit = projects.find((project) => project.project_id === projectId);
     if (projectToEdit) {
       setCurrentProject(projectToEdit);
       setFormData({
@@ -180,7 +177,7 @@ const AddProject = () => {
         startDate: projectToEdit.startDate,
         endDate: projectToEdit.endDate
       });
-      setSelectedProjectId(selectedProjectId);
+      setSelectedProjectId(projectId);
       setOpenEditDialog(true);
     } else {
       console.error('Project not found!');
@@ -216,7 +213,7 @@ const AddProject = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [openUserAssignmentDialog, setOpenUserAssignmentDialog] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
-  console.log('selectedUsers', selectedUsers);
+
   const fetchUsers = async () => {
     try {
       const response = await axiosInstance.get(`/addusers/getuserbyadmin/${loggedInUserId}`);
@@ -234,13 +231,13 @@ const AddProject = () => {
   }, []);
 
   const handleOpenUserAssignmentDialog = async (projectId) => {
-    const project = projects.find((project) => project.project_id === selectedProjectId);
-    console.log('project', project);
+    setSelectedProjectId(projectId);
+    const project = projects.find((project) => project.project_id === projectId);
     if (project) {
       const associatedUserIds = project.users.map((user) => user.user_id);
       setSelectedUsers(associatedUserIds);
+      setInitialSelectedUsers([...associatedUserIds]);
     }
-    setSelectedProjectId(projectId);
     setOpenUserAssignmentDialog(true);
     await fetchUsers();
   };
@@ -250,36 +247,53 @@ const AddProject = () => {
   };
 
   const handleSelectUser = (userId) => {
-    setSelectedUsers((prevSelected) => {
-      if (prevSelected.includes(userId)) {
-        return prevSelected.filter((id) => id !== userId);
+    setSelectedUsers((prevSelectedUsers) => {
+      if (prevSelectedUsers.includes(userId)) {
+        return prevSelectedUsers.filter((id) => id !== userId);
       } else {
-        return [...prevSelected, userId];
+        return [...prevSelectedUsers, userId];
       }
     });
   };
 
-  const handleSaveUserAssignments = async () => {
-    setOpenUserAssignmentDialog(false);
+  const [initialSelectedUsers, setInitialSelectedUsers] = useState([]);
 
-    const updatePromises = selectedUsers.map((userId) => {
-      return axiosInstance.put(`addusers/updateuserprojects/${userId}`, {
-        project_ids: [selectedProjectId]
-      });
-    });
+  const handleSaveUserAssignments = async () => {
+    const usersToAdd = selectedUsers.filter((userId) => !initialSelectedUsers.includes(userId));
+    const usersToRemove = initialSelectedUsers.filter((userId) => !selectedUsers.includes(userId));
 
     try {
-      const responses = await Promise.all(updatePromises);
-      responses.forEach((response, index) => {
-        console.log(`Response for user ${selectedUsers[index]}:`, response.data);
-      });
-      await fetchUsers();
-      console.log('User assignments updated successfully');
+      await Promise.all([
+        ...usersToAdd.map((userId) =>
+          axiosInstance.put(`/addusers/updateuserprojects/${userId}`, {
+            addProjectIds: [selectedProjectId],
+            removeProjectIds: []
+          })
+        ),
+        ...usersToRemove.map((userId) =>
+          axiosInstance.put(`/addusers/updateuserprojects/${userId}`, {
+            addProjectIds: [],
+            removeProjectIds: [selectedProjectId]
+          })
+        )
+      ]);
+
+      toast.success('User project assignments updated successfully');
+      handleCloseUserAssignmentDialog();
+      setInitialSelectedUsers(selectedUsers);
+      fetchProjects();
+      fetchUsers();
     } catch (error) {
-      console.error('Error updating user assignments:', error);
+      console.error('Error updating user projects:', error);
+      toast.error('Error updating user projects');
     }
   };
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredUsers, setFilteredUsers] = useState([]);
 
+  useEffect(() => {
+    setFilteredUsers(allUsers.filter((user) => `${user.firstname} ${user.lastname}`.toLowerCase().includes(searchTerm.toLowerCase())));
+  }, [searchTerm, allUsers]);
   return (
     <>
       {loading && (
@@ -425,8 +439,8 @@ const AddProject = () => {
                           <Menu id="simple-menu" anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={handleMenuClose}>
                             <MenuItem
                               onClick={() => {
-                                console.log('Menu item project ID:', project.project_id);
-                                handleOpenEditDialog(project.project_id);
+                                handleOpenEditDialog(selectedProjectId);
+                                handleMenuClose();
                               }}
                             >
                               Edit
@@ -434,14 +448,21 @@ const AddProject = () => {
 
                             <MenuItem
                               onClick={() => {
-                                console.log('Menu item project ID:', project.project_id);
-                                handleOpenUserAssignmentDialog(project.project_id);
+                                handleOpenUserAssignmentDialog(selectedProjectId); // And he
+                                handleMenuClose();
                               }}
                             >
                               Manage User
                             </MenuItem>
 
-                            <MenuItem onClick={handleOpenDeleteDialog}>Delete</MenuItem>
+                            <MenuItem
+                              onClick={() => {
+                                handleOpenDeleteDialog(selectedProjectId); // And he
+                                handleMenuClose();
+                              }}
+                            >
+                              Delete
+                            </MenuItem>
                           </Menu>
                         </Box>
                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
@@ -483,8 +504,7 @@ const AddProject = () => {
                                 variant="outlined"
                                 color="primary"
                                 size="small"
-                                // icon={<EmailIcon />}
-                                style={{ padding: '15px' }}
+                                style={{ padding: '15px', margin: '1px' }}
                               />
                             ))}
                           </div>
@@ -628,25 +648,79 @@ const AddProject = () => {
             </Button>
           </DialogActions>
         </Dialog>
-        <Dialog open={openUserAssignmentDialog} onClose={handleCloseUserAssignmentDialog}>
-          <DialogTitle>Assign Users</DialogTitle>
+        <Dialog open={openUserAssignmentDialog} onClose={handleCloseUserAssignmentDialog} maxWidth="sm" fullWidth>
+          <DialogTitle style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white', fontSize: '20px', fontWeight: 'bold' }}>
+            Assign Users
+          </DialogTitle>
           <DialogContent>
-            <List>
-              {allUsers.map((user) => (
-                <ListItem key={user.user_id} button onClick={() => handleSelectUser(user.user_id)}>
-                  <ListItemIcon>
-                    <Checkbox edge="start" checked={selectedUsers.includes(user.user_id)} tabIndex={-1} disableRipple />
-                  </ListItemIcon>
-                  <ListItemText primary={`${user.firstname} ${user.lastname}`} />
+            <div style={{ marginBottom: '10px', fontSize: '16px', color: 'rgba(0, 0, 0, 0.6)', fontWeight: 'bold', marginLeft: '5px' }}>
+              <p>You can assign or unassign any user by checking or unchecking the box next to their name.</p>
+            </div>
+            <TextField
+              margin="dense"
+              variant="outlined"
+              fullWidth
+              label="Search Users"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ marginBottom: '20px' }}
+            />
+
+            <List
+              subheader={
+                <Typography style={{ fontSize: '18px', color: 'rgba(0, 0, 0, 0.87)', fontWeight: 'bold' }}>
+                  Current assigned user(s)
+                </Typography>
+              }
+            >
+              {filteredUsers.filter((user) => selectedUsers.includes(user.user_id)).length > 0 ? (
+                filteredUsers
+                  .filter((user) => selectedUsers.includes(user.user_id))
+                  .map((user) => (
+                    <ListItem key={user.user_id} button onClick={() => handleSelectUser(user.user_id)}>
+                      <ListItemIcon>
+                        <Checkbox edge="start" checked tabIndex={-1} disableRipple style={{ color: 'rgba(71, 121, 126, 1)' }} />
+                      </ListItemIcon>
+                      <ListItemText primary={`${user.firstname} ${user.lastname}`} style={{ marginLeft: '10px' }} />
+                    </ListItem>
+                  ))
+              ) : (
+                <ListItem>
+                  <ListItemText primary="No assigned users" />
                 </ListItem>
-              ))}
+              )}
+            </List>
+
+            <List
+              subheader={
+                <Typography style={{ fontSize: '18px', color: 'rgba(0, 0, 0, 0.87)', fontWeight: 'bold' }}>
+                  Choose user(s) to assign to this project
+                </Typography>
+              }
+            >
+              {filteredUsers.filter((user) => !selectedUsers.includes(user.user_id)).length > 0 ? (
+                filteredUsers
+                  .filter((user) => !selectedUsers.includes(user.user_id))
+                  .map((user) => (
+                    <ListItem key={user.user_id} button onClick={() => handleSelectUser(user.user_id)}>
+                      <ListItemIcon>
+                        <Checkbox edge="start" checked={false} tabIndex={-1} disableRipple style={{ color: 'grey' }} />
+                      </ListItemIcon>
+                      <ListItemText primary={`${user.firstname} ${user.lastname}`} style={{ marginLeft: '10px' }} />
+                    </ListItem>
+                  ))
+              ) : (
+                <ListItem>
+                  <ListItemText primary="No unassigned users" />
+                </ListItem>
+              )}
             </List>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseUserAssignmentDialog} color="primary">
+            <Button onClick={handleCloseUserAssignmentDialog} style={{ color: 'rgba(71, 121, 126, 1)' }}>
               Cancel
             </Button>
-            <Button onClick={handleSaveUserAssignments} color="primary">
+            <Button onClick={handleSaveUserAssignments} style={{ backgroundColor: 'rgba(71, 121, 126, 1)', color: 'white' }}>
               Save
             </Button>
           </DialogActions>

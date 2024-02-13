@@ -73,7 +73,6 @@ const AddUser = () => {
       const response = await axiosInstance.get(`/addprojects/projects/names/${loggedInUserId}`);
       setProjects(response.data.data);
 
-      // Set the selected project in the edit dialog
       const selectedProject = response.data.data.find((p) => p.project_id === selectedEditProject);
       if (selectedProject) {
         setEditFormData({
@@ -97,7 +96,7 @@ const AddUser = () => {
     setFormData({
       ...formData,
       project_ids: selectedProjectIds, // Assuming your formData has a field for storing project_ids as an array
-      projectName: selectedProjectNames.join(', ') // Join project names into a string if needed
+      projectNames: selectedProjectNames // Store as an array of names
     });
   };
 
@@ -111,7 +110,8 @@ const AddUser = () => {
     phonenumber: '',
     password: '',
     admin_id: loggedInUserId,
-    project_ids: []
+    project_ids: [],
+    projectNames: [] // Add this to store selected project names
   });
 
   const handleSave = async () => {
@@ -219,7 +219,8 @@ const AddUser = () => {
     email: '',
     phonenumber: '',
     password: '',
-    project_ids: [] // Initialize project_ids as an empty array
+    project_ids: [],
+    projectNames: [] // Also include this in edit form data
   });
   // const [selectedEditProjects, setSelectedEditProjects] = useState([]);
 
@@ -230,7 +231,8 @@ const AddUser = () => {
       companyname: user.companyname,
       email: user.email,
       phonenumber: user.phonenumber,
-      project_ids: user.project_ids || [] // Ensure project_ids is an array
+      project_ids: user.project_ids || [],
+      projectNames: user.projectNames || [] // Make sure this line correctly reflects your data structure
     });
 
     // setSelectedEditProjects(user.project_ids || []); // Set the selected projects
@@ -514,21 +516,7 @@ const AddUser = () => {
                         <TableRow key={user._id}>
                           <TableCell>{user.firstname}</TableCell>
                           <TableCell>{user.lastname}</TableCell>
-                          <TableCell>
-                            {user.projectName.split(',').map((projectName, index) => (
-                              <div
-                                key={index}
-                                style={{
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  maxWidth: '200px' // Adjust the maxWidth to fit your design needs
-                                }}
-                              >
-                                {projectName.trim()}
-                              </div>
-                            ))}
-                          </TableCell>
+                          <TableCell>{Array.isArray(user.projectNames) ? user.projectNames.join(', ') : user.projectNames}</TableCell>
 
                           <TableCell>{user.email}</TableCell>
                           <TableCell>{user.phonenumber}</TableCell>
@@ -680,12 +668,15 @@ const AddUser = () => {
                     label="Projects"
                     value={editFormData.project_ids}
                     onChange={(event) => {
+                      const selectedProjectIds = event.target.value; // This is an array of selected project IDs
+                      const selectedProjectNames = selectedProjectIds
+                        .map((projectId) => projects.find((project) => project.project_id === projectId)?.projectName)
+                        .filter(Boolean); // This ensures only valid project names are included
+
                       setEditFormData({
                         ...editFormData,
-                        project_ids: event.target.value,
-                        projectName: event.target.value
-                          .map((projectId) => projects.find((p) => p.project_id === projectId)?.projectName || '')
-                          .join(', ')
+                        project_ids: selectedProjectIds,
+                        projectNames: selectedProjectNames // Correctly update the projectNames array
                       });
                     }}
                     variant="outlined"

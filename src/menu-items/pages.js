@@ -47,14 +47,6 @@ const pages = {
       icon: icons.DatabaseOutlined
       // target: true
     }
-    // {
-    //   id: 'Report',
-    //   title: 'All Report',
-    //   type: 'item',
-    //   url: '/admin/alreports',
-    //   icon: icons.DatabaseOutlined
-    //   // target: true
-    // }
   ]
 };
 

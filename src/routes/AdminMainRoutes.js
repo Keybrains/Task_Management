@@ -9,7 +9,7 @@ import AddUser from 'team/AddUser';
 import AddForm from 'form/AddForm';
 import Reports from 'report/Reports';
 import EditForm from 'form/EditFrom';
-import AllReports from 'report/AllReports';
+
 
 // render - dashboard
 const DashboardDefault = Loadable(lazy(() => import('pages/dashboard/DashboardDefault')));
@@ -86,10 +86,7 @@ const AdminMainRoutes = {
       path: 'reports',
       element: <Reports />
     },
-    {
-      path: 'alreports',
-      element: <AllReports />
-    }
+  
   ]
 };
 

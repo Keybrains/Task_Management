@@ -4,7 +4,7 @@ import React from 'react';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
-import { AppBar, IconButton, Toolbar, useMediaQuery, Box } from '@mui/material';
+import { AppBar, IconButton, Toolbar, useMediaQuery } from '@mui/material';
 
 // project import
 import AppBarStyled from './UserAppBarStyled';
@@ -14,14 +14,14 @@ import HeaderContent from './HeaderContent/UserHeaderContent';
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 
 // ==============================|| MAIN LAYOUT - HEADER ||============================== //
-import Logo from 'assets/banners/1.jpg';
-import Logo1 from 'assets/banners/2.jpg';
-import Logo2 from 'assets/banners/3.jpg';
-import Logo3 from 'assets/banners/4.jpg';
-import Logo4 from 'assets/banners/5.jpg';
-import Logo5 from 'assets/banners/6.jpg';
+// import Logo from 'assets/banners/1.jpg';
+// import Logo1 from 'assets/banners/2.jpg';
+// import Logo2 from 'assets/banners/3.jpg';
+// import Logo3 from 'assets/banners/4.jpg';
+// import Logo4 from 'assets/banners/5.jpg';
+// import Logo5 from 'assets/banners/6.jpg';
 
-import { Stack } from '@mui/material';
+// import { Stack } from '@mui/material';
 
 const UserHeader = ({ open, handleDrawerToggle }) => {
   const theme = useTheme();
@@ -33,7 +33,7 @@ const UserHeader = ({ open, handleDrawerToggle }) => {
   // common header
   const mainHeader = (
     <>
-       <Stack
+       {/* <Stack
         direction= 'row'
         spacing={2}
         alignItems="center"
@@ -55,7 +55,7 @@ const UserHeader = ({ open, handleDrawerToggle }) => {
             <br />
           </React.Fragment>
         ))}
-      </Stack>
+      </Stack> */}
       <Toolbar>
         <IconButton
           disableRipple

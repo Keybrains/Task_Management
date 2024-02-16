@@ -353,7 +353,7 @@ const AddTask = () => {
         </div>
       )}
       <div style={loading ? { display: 'none' } : {}}>
-        <Grid container spacing={3} alignItems="center" justifyContent="space-between" style={{ paddingTop: '125px' }}>
+        <Grid container spacing={3} alignItems="center" justifyContent="space-between" style={{ paddingTop: '10px' }}>
           <Grid item xs={12} md={4}>
             <Typography variant="h4" gutterBottom>
               All Tasks

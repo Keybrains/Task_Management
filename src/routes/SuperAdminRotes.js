@@ -5,6 +5,7 @@ import Loadable from 'components/Loadable';
 import AdminMainLayout from 'superadmin/layout/MainLayout/AdminMainLayout';
 import AddAdmin from 'superadmin/addaadmin/AddAdmin';
 import RequireAuth from 'RequireAuth';
+import Addproject from 'superadmin/project/Addproject';
 
 // render - dashboard
 const DashboardDefault = Loadable(lazy(() => import('superadmin/pages/dashboard/SuperAdminDashboardDefault')));
@@ -64,6 +65,10 @@ const SuperAdminRotes = {
     {
       path: 'addadmin',
       element: <AddAdmin />
+    },
+    {
+      path: 'addproject',
+      element: <Addproject />
     }
   ]
 };

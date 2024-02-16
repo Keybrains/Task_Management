@@ -17,7 +17,7 @@ const UserHeaderContent = () => {
 
   return (
     <>
-      {!matchesXs && <Search />}
+      {<Search />}
       {matchesXs && <Box sx={{ width: '100%', ml: 1 }} />}
 
       {/* <IconButton

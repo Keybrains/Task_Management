@@ -20,6 +20,13 @@ const pages = {
       type: 'item',
       url: '/superadmin/addadmin',
       icon: icons.UserOutlined
+    },
+    {
+      id: 'addproject',
+      title: 'Add Project',
+      type: 'item',
+      url: '/superadmin/addproject',
+      icon: icons.UserOutlined
     }
   ]
 };

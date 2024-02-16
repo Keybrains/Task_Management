@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-// material-ui
+import React, { useEffect, useRef, useState } from 'react';
+import axios from 'axios'; // Ensure axios is installed
 import { useTheme } from '@mui/material/styles';
 import {
   Avatar,
@@ -12,45 +12,33 @@ import {
   ListItemButton,
   ListItemAvatar,
   ListItemText,
-  ListItemSecondaryAction,
   Paper,
   Popper,
   Typography,
-  useMediaQuery
+  useMediaQuery,
+  Chip,
+  ListItem
 } from '@mui/material';
-
-// project import
-import MainCard from 'user/components/UserMainCard';
-import Transitions from 'components/@extended/Transitions';
-
-// assets
-import { BellOutlined, CloseOutlined, GiftOutlined, MessageOutlined, SettingOutlined } from '@ant-design/icons';
-
-// sx styles
-const avatarSX = {
-  width: 36,
-  height: 36,
-  fontSize: '1rem'
-};
-
-const actionSX = {
-  mt: '6px',
-  ml: 1,
-  top: 'auto',
-  right: 'auto',
-  alignSelf: 'flex-start',
-
-  transform: 'none'
-};
-
-// ==============================|| HEADER CONTENT - NOTIFICATION ||============================== //
+import MainCard from 'user/components/UserMainCard'; // Adjust import path as needed
+import Transitions from 'components/@extended/Transitions'; // Adjust import path as needed
+import { BellOutlined, CloseOutlined } from '@ant-design/icons'; // Ensure icons are correctly imported
+import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined'; // Import Add icon
+import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined'; // Import Remove icon
+// Assuming the notification object structure is something like:
+// { id: number, title: string, message: string, time: string }
+// Adjust according to your actual API response
 
 const UserNotification = () => {
   const theme = useTheme();
+  const decodedToken = localStorage.getItem('decodedToken');
+  const parsedToken = JSON.parse(decodedToken);
+  const loggedInUserId = parsedToken.userId?.user_id;
+  const loggedInAdminId = parsedToken.userId?.admin_id;
   const matchesXs = useMediaQuery(theme.breakpoints.down('md'));
-
   const anchorRef = useRef(null);
   const [open, setOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+
   const handleToggle = () => {
     setOpen((prevOpen) => !prevOpen);
   };
@@ -62,22 +50,38 @@ const UserNotification = () => {
     setOpen(false);
   };
 
-  const iconBackColorOpen = 'grey.300';
-  const iconBackColor = 'grey.100';
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4002/api/notification/notifications/${loggedInAdminId}/${loggedInUserId}`);
+        // Check if the response has a 'data' field and it's an array
+        if (response.data && Array.isArray(response.data.data)) {
+          setNotifications(response.data.data); // Set the 'data' field of the response to the state
+        } else {
+          console.error('Expected an array of notifications, but got:', typeof response.data);
+          setNotifications([]); // Set to an empty array if not the expected type
+        }
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   return (
     <Box sx={{ flexShrink: 0, ml: 0.75 }}>
       <IconButton
         disableRipple
         color="secondary"
-        sx={{ color: 'text.primary', bgcolor: open ? iconBackColorOpen : iconBackColor }}
-        aria-label="open profile"
+        sx={{ color: 'text.primary', bgcolor: open ? 'grey.300' : 'grey.100' }}
+        aria-label="open notifications"
         ref={anchorRef}
-        aria-controls={open ? 'profile-grow' : undefined}
+        aria-controls={open ? 'notification-grow' : undefined}
         aria-haspopup="true"
-        // onClick={handleToggle}
+        onClick={handleToggle}
       >
-        <Badge badgeContent={4} color="primary">
+        <Badge badgeContent={notifications.length} color="primary">
           <BellOutlined />
         </Badge>
       </IconButton>
@@ -100,7 +104,7 @@ const UserNotification = () => {
         }}
       >
         {({ TransitionProps }) => (
-          <Transitions type="fade" in={open} {...TransitionProps}>
+          <Transitions type="fade" {...TransitionProps}>
             <Paper
               sx={{
                 boxShadow: theme.customShadows.z1,
@@ -115,156 +119,61 @@ const UserNotification = () => {
               <ClickAwayListener onClickAway={handleClose}>
                 <MainCard
                   title="Notification"
-                  elevation={0}
-                  border={false}
-                  content={false}
                   secondary={
                     <IconButton size="small" onClick={handleToggle}>
                       <CloseOutlined />
                     </IconButton>
                   }
                 >
-                  <List
-                    component="nav"
-                    sx={{
-                      p: 0,
-                      '& .MuiListItemButton-root': {
-                        py: 0.5,
-                        '& .MuiAvatar-root': avatarSX,
-                        '& .MuiListItemSecondaryAction-root': { ...actionSX, position: 'relative' }
-                      }
-                    }}
-                  >
-                    <ListItemButton>
-                      <ListItemAvatar>
-                        <Avatar
-                          sx={{
-                            color: 'success.main',
-                            bgcolor: 'success.lighter'
-                          }}
-                        >
-                          <GiftOutlined />
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Typography variant="h6">
-                            It&apos;s{' '}
-                            <Typography component="span" variant="subtitle1">
-                              Cristina danny&apos;s
-                            </Typography>{' '}
-                            birthday today.
-                          </Typography>
-                        }
-                        secondary="2 min ago"
-                      />
-                      <ListItemSecondaryAction>
-                        <Typography variant="caption" noWrap>
-                          3:00 AM
-                        </Typography>
-                      </ListItemSecondaryAction>
-                    </ListItemButton>
-                    <Divider />
-                    <ListItemButton>
-                      <ListItemAvatar>
-                        <Avatar
-                          sx={{
-                            color: 'primary.main',
-                            bgcolor: 'primary.lighter'
-                          }}
-                        >
-                          <MessageOutlined />
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Typography variant="h6">
-                            <Typography component="span" variant="subtitle1">
-                              Aida Burg
-                            </Typography>{' '}
-                            commented your post.
-                          </Typography>
-                        }
-                        secondary="5 August"
-                      />
-                      <ListItemSecondaryAction>
-                        <Typography variant="caption" noWrap>
-                          6:00 PM
-                        </Typography>
-                      </ListItemSecondaryAction>
-                    </ListItemButton>
-                    <Divider />
-                    <ListItemButton>
-                      <ListItemAvatar>
-                        <Avatar
-                          sx={{
-                            color: 'error.main',
-                            bgcolor: 'error.lighter'
-                          }}
-                        >
-                          <SettingOutlined />
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Typography variant="h6">
-                            Your Profile is Complete &nbsp;
-                            <Typography component="span" variant="subtitle1">
-                              60%
-                            </Typography>{' '}
-                          </Typography>
-                        }
-                        secondary="7 hours ago"
-                      />
-                      <ListItemSecondaryAction>
-                        <Typography variant="caption" noWrap>
-                          2:45 PM
-                        </Typography>
-                      </ListItemSecondaryAction>
-                    </ListItemButton>
-                    <Divider />
-                    <ListItemButton>
-                      <ListItemAvatar>
-                        <Avatar
-                          sx={{
-                            color: 'primary.main',
-                            bgcolor: 'primary.lighter'
-                          }}
-                        >
-                          C
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Typography variant="h6">
-                            <Typography component="span" variant="subtitle1">
-                              Cristina Danny
-                            </Typography>{' '}
-                            invited to join{' '}
-                            <Typography component="span" variant="subtitle1">
-                              Meeting.
-                            </Typography>
-                          </Typography>
-                        }
-                        secondary="Daily scrum meeting time"
-                      />
-                      <ListItemSecondaryAction>
-                        <Typography variant="caption" noWrap>
-                          9:10 PM
-                        </Typography>
-                      </ListItemSecondaryAction>
-                    </ListItemButton>
-                    <Divider />
-                    <ListItemButton sx={{ textAlign: 'center', py: `${12}px !important` }}>
-                      <ListItemText
-                        primary={
-                          <Typography variant="h6" color="primary">
-                            View All
-                          </Typography>
-                        }
-                      />
-                    </ListItemButton>
-                  </List>
+                  {notifications.length > 0 ? (
+                    <List sx={{ p: 0 }}>
+                      {notifications.map((notification, index) => (
+                        <React.Fragment key={notification._id}>
+                          <ListItemButton sx={{ bgcolor: notification.isUnRead ? 'action.hover' : 'background.paper' }}>
+                            <ListItemAvatar>
+                              <Avatar sx={{ bgcolor: notification.actionType === 'add' ? 'success.main' : 'error.main' }}>
+                                {/* Using different icons for add/remove actions */}
+                                {notification.actionType === 'add' ? (
+                                  <AddCircleOutlineOutlinedIcon color="action" />
+                                ) : (
+                                  <RemoveCircleOutlineOutlinedIcon color="error" />
+                                )}
+                              </Avatar>
+                            </ListItemAvatar>
+                            <ListItemText
+                              primary={
+                                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                                  {notification.actionType === 'add'
+                                    ? `Added to "${notification.projectDetails.projectName}"`
+                                    : `Removed from "${notification.projectDetails.projectName}"`}
+                                </Typography>
+                              }
+                              secondary={
+                                <>
+                                  <Typography variant="body2" component="span" color="textSecondary">
+                                    {notification.message} {/* Display the message if available */}
+                                  </Typography>
+                                  {/* Display project details with a lighter font */}
+                                  <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
+                                    Priority: {notification.projectDetails.priority}
+                                  </Typography>
+                                  <Typography variant="caption" display="block">
+                                    Start: {notification.projectDetails.startDate} | End: {notification.projectDetails.endDate}
+                                  </Typography>
+                                </>
+                              }
+                            />
+                            {notification.isUnRead && <Chip label="New" color="primary" size="small" sx={{ ml: 1, height: 'auto' }} />}
+                          </ListItemButton>
+                          {index < notifications.length - 1 && <Divider />}
+                        </React.Fragment>
+                      ))}
+                    </List>
+                  ) : (
+                    <ListItem sx={{ justifyContent: 'center' }}>
+                      <Typography variant="subtitle1">No notifications</Typography>
+                    </ListItem>
+                  )}
                 </MainCard>
               </ClickAwayListener>
             </Paper>

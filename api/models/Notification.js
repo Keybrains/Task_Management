@@ -4,6 +4,18 @@ const notificationSchema = new mongoose.Schema({
   notification_id: {
     type: String
   },
+  userId: {
+    type: String
+  },
+  adminId: {
+    type: String
+  },
+  projectId: {
+    type: String
+  },
+  actionType: {
+    type: String
+  },
   isUnRead: {
     type: Boolean,
     default: true

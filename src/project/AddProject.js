@@ -280,6 +280,17 @@ const AddProject = () => {
         )
       ]);
 
+      // After successful update, send notifications
+      // For added users
+      usersToAdd.forEach((userId) => {
+        sendNotification(userId, 'add', selectedProjectId);
+      });
+
+      // For removed users
+      usersToRemove.forEach((userId) => {
+        sendNotification(userId, 'remove', selectedProjectId);
+      });
+
       toast.success('User project assignments updated successfully');
       handleCloseUserAssignmentDialog();
       setInitialSelectedUsers(selectedUsers);
@@ -290,6 +301,23 @@ const AddProject = () => {
       toast.error('Error updating user projects');
     }
   };
+
+  // Function to send notifications
+  const sendNotification = async (userId, actionType, projectId) => {
+    try {
+      const notificationData = {
+        userId,
+        projectId,
+        actionType,
+        adminId: loggedInUserId
+      };
+      await axiosInstance.post('/notification/notifications', notificationData);
+      console.log('notificationData', notificationData);
+    } catch (error) {
+      console.error('Error sending notification:', error);
+    }
+  };
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
 
@@ -304,7 +332,7 @@ const AddProject = () => {
 
   const downloadReport = async (timeFrame) => {
     try {
-      const response = await axiosInstance.get(`http://localhost:4002/api/addtasks/tasks/summary/1706938771962djdxtyim3586406372`, {
+      const response = await axiosInstance.get(`/addtasks/tasks/summary/${loggedInUserId}`, {
         params: { timeFrame }
       });
       const projects = response.data;

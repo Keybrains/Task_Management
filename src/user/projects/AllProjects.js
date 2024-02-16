@@ -80,7 +80,7 @@ const AllProjects = () => {
         </div>
       )}
       <div style={loading ? { display: 'none' } : {}}>
-        <Grid container spacing={3} style={{ paddingTop: '100px' }}>
+        <Grid container spacing={3} style={{ paddingTop: '10px' }}>
           <ToastContainer
             position="top-right"
             autoClose={5000}

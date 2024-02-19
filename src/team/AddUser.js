@@ -116,8 +116,11 @@ const AddUser = () => {
 
   const handleSave = async () => {
     try {
-      await axiosInstance.post('/addusers/adduser', formData);
+      const responce = await axiosInstance.post('/addusers/adduser', formData);
       toast.success('User added successfully');
+      console.log('responce', responce.data);
+      console.log('formData', formData);
+      await sendNotification(responce.data.user_id, 'add', formData.project_ids);
       fetchUsers();
       handleCloseDialog();
     } catch (error) {
@@ -242,13 +245,27 @@ const AddUser = () => {
 
   const handleEditSave = async () => {
     try {
+      const originalProjectIds = selectedUser?.project_ids || [];
+
       await axiosInstance.put(`/addusers/edituser/${selectedUser?.user_id}`, {
         ...editFormData,
-        project_ids: editFormData.project_ids || [] // Ensure project_ids is an array
+        project_ids: editFormData.project_ids || []
       });
+
       toast.success('User updated successfully');
-      fetchUsers(); // Refresh the admin list
+      fetchUsers();
       setEditDialogOpen(false);
+
+      const addedProjects = editFormData.project_ids.filter((pid) => !originalProjectIds.includes(pid));
+      const removedProjects = originalProjectIds.filter((pid) => !editFormData.project_ids.includes(pid));
+
+      if (addedProjects.length > 0) {
+        await sendNotification(selectedUser?.user_id, 'add', addedProjects);
+      }
+
+      if (removedProjects.length > 0) {
+        await sendNotification(selectedUser?.user_id, 'remove', removedProjects);
+      }
     } catch (error) {
       console.error('Error updating user:', error);
       toast.error('Error updating user');
@@ -282,6 +299,23 @@ const AddUser = () => {
 
   // const [selectedEditProject, setSelectedEditProject] = useState(null);
   // const [selectedProjects, setSelectedProjects] = useState([]);
+  const sendNotification = async (userId, actionType, projectIds) => {
+    try {
+      for (const projectId of projectIds) {
+        const notificationData = {
+          userId,
+          projectId,
+          actionType, // "add" or "remove"
+          adminId: loggedInUserId // Assuming loggedInUserId is defined somewhere in your code
+        };
+        const response = await axiosInstance.post('/notification/notifications', notificationData);
+        console.log('Notification response:', response.data);
+      }
+    } catch (error) {
+      console.error('Error sending notification:', error);
+    }
+  };
+
   return (
     <>
       {loading && (
@@ -668,15 +702,15 @@ const AddUser = () => {
                     label="Projects"
                     value={editFormData.project_ids}
                     onChange={(event) => {
-                      const selectedProjectIds = event.target.value; // This is an array of selected project IDs
+                      const selectedProjectIds = event.target.value;
                       const selectedProjectNames = selectedProjectIds
                         .map((projectId) => projects.find((project) => project.project_id === projectId)?.projectName)
-                        .filter(Boolean); // This ensures only valid project names are included
+                        .filter(Boolean);
 
                       setEditFormData({
                         ...editFormData,
                         project_ids: selectedProjectIds,
-                        projectNames: selectedProjectNames // Correctly update the projectNames array
+                        projectNames: selectedProjectNames
                       });
                     }}
                     variant="outlined"

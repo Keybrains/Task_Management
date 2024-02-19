@@ -3,6 +3,8 @@ const router = express.Router();
 const Notification = require('../models/Notification');
 const moment = require('moment');
 const AddProject = require('../models/Addproject');
+const User = require('../models/AddUser');
+const ReportingForm = require('../models/AddReportingForm');
 
 router.post('/notifications', async (req, res) => {
   try {
@@ -12,6 +14,7 @@ router.post('/notifications', async (req, res) => {
     const randomNumber = Math.floor(Math.random() * Math.pow(10, 10))
       .toString()
       .padStart(10, '0');
+
     const uniqueId = `${timestamp}${randomString}${randomNumber}`;
 
     const notificationUniqueId = (req.body['chat_id'] = uniqueId);
@@ -24,7 +27,6 @@ router.post('/notifications', async (req, res) => {
       adminId,
       createAt: moment().format('YYYY-MM-DD HH:mm:ss'),
       updateAt: moment().format('YYYY-MM-DD HH:mm:ss')
-      // Add any other notification-related fields as needed
     });
 
     const savedNotification = await newNotification.save();
@@ -43,47 +45,129 @@ router.post('/notifications', async (req, res) => {
   }
 });
 
-router.get('/notifications/:adminId/:userId', async (req, res) => {
+router.post('/formnotifications', async (req, res) => {
   try {
-    const { adminId, userId } = req.params;
+    const { formId, projectId, actionType, adminId } = req.body;
 
-    let notifications = await Notification.find({
-      adminId: adminId,
-      userId: userId
+    const users = await User.find({ project_ids: projectId });
+
+    const userIds = users.map((user) => user.user_id);
+    console.log('User IDs to save:', userIds);
+    if (users.length === 0) {
+      console.log('No users found for project ID:', projectId);
+    }
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substr(5, 15);
+    const randomNumber = Math.floor(Math.random() * Math.pow(10, 10))
+      .toString()
+      .padStart(10, '0');
+    const uniqueId = `${timestamp}${randomString}${randomNumber}`;
+
+    const notificationUniqueId = uniqueId;
+
+    const newNotification = new Notification({
+      notification_id: notificationUniqueId,
+      formId,
+      projectId,
+      actionType,
+      adminId,
+      users_ids: userIds,
+      createAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+      updateAt: moment().format('YYYY-MM-DD HH:mm:ss')
     });
 
-    if (notifications.length > 0) {
-      // Enhance notifications with project details
-      const notificationsWithProjects = await Promise.all(notifications.map(async (notification) => {
-        // Assuming 'projectId' is stored in your notification and corresponds to 'project_id' in AddProject
-        const project = await AddProject.findOne({ project_id: notification.projectId });
+    const savedNotification = await newNotification.save();
+    console.log('User IDs to save:', userIds);
+    console.log('Notification object before save:', newNotification);
 
-        // Add project details to the notification object
-        // Note: This assumes you want to include the entire project object; adjust as needed
-        notification = notification.toObject(); // Convert to plain object to allow modification
-        notification.projectDetails = project ? project : null;
-
-        return notification;
-      }));
-
-      res.status(200).json({
-        success: true,
-        data: notificationsWithProjects
-      });
-    } else {
-      res.status(404).json({
-        success: false,
-        message: 'No notifications found for the provided adminId and userId'
-      });
-    }
+    res.status(201).json({
+      success: true,
+      data: savedNotification,
+      message: 'Notification created successfully'
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Error fetching notifications',
+      message: 'Error creating notification',
       error: error.message
     });
   }
 });
 
+router.get('/userNotifications/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const notifications = await Notification.find({
+      $or: [{ userId: userId }, { users_ids: userId }]
+    });
+
+    if (notifications.length === 0) {
+      return res.status(404).json({
+        success: true,
+        message: 'No notifications found'
+      });
+    }
+
+    // Enhance notifications with project and form details
+    const enhancedNotifications = await Promise.all(
+      notifications.map(async (notification) => {
+        const project = await AddProject.findOne({ project_id: notification.projectId });
+        let form = null;
+
+        if (notification.formId) {
+          form = await ReportingForm.findOne({ form_id: notification.formId });
+        }
+
+        return {
+          ...notification.toObject(),
+          projectDetails: project ? project.toObject() : null,
+          formDetails: form ? form.toObject() : null
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      data: enhancedNotifications,
+      message: 'Notifications retrieved successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving notifications',
+      error: error.message
+    });
+  }
+});
+
+router.delete('/notifications/:notificationId', async (req, res) => {
+  const { notificationId } = req.params;
+  const { userId } = req.body;
+
+  try {
+    const notification = await Notification.findOne({ notification_id: notificationId });
+
+    if (!notification) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
+    }
+
+    if (notification.formId && notification.users_ids && notification.users_ids.length) {
+      notification.users_ids = notification.users_ids.filter((id) => id !== userId);
+
+      if (notification.users_ids.length === 0) {
+        await Notification.deleteOne({ notification_id: notificationId });
+      } else {
+        await notification.save();
+      }
+    } else {
+      await Notification.deleteOne({ notification_id: notificationId });
+    }
+
+    res.json({ success: true, message: 'Notification updated or deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error deleting notification', error: error.message });
+  }
+});
 
 module.exports = router;

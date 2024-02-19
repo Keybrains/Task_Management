@@ -96,15 +96,31 @@ const AddForm = () => {
 
   const handleSave = async () => {
     try {
-      // Include project_id and projectName in formData
       const updatedFormData = {
         ...formData,
         project_id: selectedProjectId,
         projectName: projects.find((project) => project.project_id === selectedProjectId)?.projectName || ''
       };
 
-      await axiosInstance.post('/addreportingfrom/addform', updatedFormData);
-      toast.success('Form added successfully');
+      const response = await axiosInstance.post('/addreportingfrom/addform', updatedFormData);
+      console.log('response', response)
+      const newFormId = response.data.form.form_id;
+
+      if (newFormId) {
+        const notificationData = {
+          projectId: selectedProjectId,
+          formId: newFormId,
+          actionType: 'add',
+          adminId: loggedInUserId
+        };
+
+        await axiosInstance.post('/notification/formnotifications', notificationData);
+
+        toast.success('Form added successfully');
+      } else {
+        toast.error('Form added but could not retrieve form ID for notification.');
+      }
+
       handleCloseDialog();
       getAdminForms();
     } catch (error) {

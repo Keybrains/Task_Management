@@ -21,6 +21,8 @@ const AddTaskRouter = require('./routes/AddTask');
 const CountRouter = require('./routes/Count');
 const NotificationRouter = require('./routes/Notification');
 const AdminProjectRouter = require('./routes/AdminProject');
+const AdminNotificationRouter = require('./routes/AdminNotification');
+
 
 // view engine setup
 // app.set('views', path.join(__dirname, 'views'));
@@ -44,6 +46,7 @@ app.use('/api/addtasks', AddTaskRouter);
 app.use('/api/counts', CountRouter);
 app.use('/api/notification', NotificationRouter);
 app.use('/api/adminprojects', AdminProjectRouter);
+app.use('/api/adminnotification', AdminNotificationRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

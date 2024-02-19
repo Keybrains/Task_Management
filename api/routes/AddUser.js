@@ -38,6 +38,7 @@ router.post('/adduser', async (req, res) => {
     const hashedPassword = await hashPassword(req.body.password);
     const { project_ids } = req.body;
     const { projectNames } = req.body;
+    
     const newUser = new AddUser({
       firstname: req.body.firstname,
       lastname: req.body.lastname,
@@ -57,8 +58,10 @@ router.post('/adduser', async (req, res) => {
 
     res.json({
       success: true,
-      message: 'User SignUp Successful'
+      message: 'User SignUp Successful',
+      user_id: newUser.user_id // Include the generated user_id in the response
     });
+    
   } catch (error) {
     console.error(error);
     res.status(500).json({

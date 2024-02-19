@@ -220,6 +220,7 @@ const AddTask = () => {
       };
 
       await axiosInstance.post('/addtasks/addtask', taskData);
+      await sendNotification('add', taskData.userId, taskData.adminId, taskData.projectId, taskData.formId);
 
       toast.success('Task added successfully');
       handleCloseDialog();
@@ -344,6 +345,24 @@ const AddTask = () => {
 
     return (!start || taskDate >= start) && (!end || taskDate <= end);
   });
+
+  const sendNotification = async (actionType, userId, adminId, projectId, formId) => {
+    try {
+      {
+        const notificationData = {
+          actionType,
+          userId,
+          adminId,
+          projectId,
+          formId
+        };
+        const response = await axiosInstance.post('/adminnotification/adminnotifications', notificationData);
+        console.log('Notification response:', response.data);
+      }
+    } catch (error) {
+      console.error('Error sending notification:', error);
+    }
+  };
 
   return (
     <>

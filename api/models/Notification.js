@@ -7,10 +7,18 @@ const notificationSchema = new mongoose.Schema({
   userId: {
     type: String
   },
+  users_ids: [
+    {
+      type: String
+    }
+  ],
   adminId: {
     type: String
   },
   projectId: {
+    type: String
+  },
+  formId: {
     type: String
   },
   actionType: {

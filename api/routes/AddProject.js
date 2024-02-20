@@ -26,7 +26,8 @@ router.post('/addproject', async (req, res) => {
       endDate: req.body.endDate,
       createAt: createTime,
       updateAt: updateTime,
-      project_id: userUniqueId
+      project_id: userUniqueId,
+      fileUrl: req.body.fileUrl
     });
 
     await newProject.save();
@@ -56,7 +57,6 @@ router.get('/projects/:adminId', async (req, res) => {
       });
     }
 
-    // Reverse the projects array
     projects = projects.reverse();
 
     res.json({
@@ -103,10 +103,10 @@ router.put('/editproject/:projectId', async (req, res) => {
     const updatedProject = await AddProject.findOneAndUpdate(
       { project_id: projectId },
       {
-        $set: req.body, // Update fields sent in request body
-        updateAt: moment().format('YYYY-MM-DD HH:mm:ss') // Update the 'updateAt' field to current time
+        $set: req.body,
+        updateAt: moment().format('YYYY-MM-DD HH:mm:ss')
       },
-      { new: true } // Return the updated document
+      { new: true }
     );
 
     if (!updatedProject) {
@@ -168,31 +168,22 @@ router.get('/projects-with-user/:adminId', async (req, res) => {
       });
     }
 
-    // Assuming projects are fetched correctly, now fetch users for each project
-    // This involves iterating over projects, fetching users associated with each project, and adding this info to the project object
-
     const projectsWithUsers = await Promise.all(
       projects.map(async (project) => {
-        // Find users associated with the current project
         const users = await AddUser.find({ project_ids: project.project_id });
 
-        // Add user details to the project object
-        // Note: You might want to customize the user object to only include relevant information
         return {
-          ...project.toObject(), // Convert document to object
+          ...project.toObject(),
           users: users.map((user) => ({
             user_id: user.user_id,
             firstname: user.firstname,
             lastname: user.lastname,
             email: user.email
-            // Add any other user fields you need
           }))
         };
       })
     );
 
-    // Reverse the projectsWithUsers array if necessary
-    // Note: It might be more efficient to sort in the query if your DB supports it
     const reversedProjectsWithUsers = projectsWithUsers.reverse();
 
     res.json({

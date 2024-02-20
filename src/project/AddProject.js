@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import axiosInstance from 'config/AxiosInstanceAdmin';
+import axios from 'axios';
 import { Flag, ShortText, Description, CalendarToday } from '@mui/icons-material';
 import {
   Box,
@@ -53,6 +54,7 @@ const AddProject = () => {
   const decodedToken = localStorage.getItem('decodedToken');
   const parsedToken = JSON.parse(decodedToken);
   const loggedInUserId = parsedToken.userId?.user_id;
+
   const [formData, setFormData] = useState({
     admin_id: loggedInUserId,
     projectName: '',
@@ -72,14 +74,31 @@ const AddProject = () => {
   };
 
   const handleSave = async () => {
-    try {
-      await axiosInstance.post('/addprojects/addproject', formData);
-      toast.success('Project added successfully');
-      handleCloseDialog();
-      fetchProjects();
-    } catch (error) {
-      console.error('Error adding project:', error);
-      toast.error('Error adding project');
+    if (selectedFile) {
+      console.log(selectedFile);
+      const formDataa = new FormData();
+      formDataa.append('files', selectedFile);
+
+      try {
+        const uploadResponse = await axios.post('https://propertymanager.cloudpress.host/api/images/upload', formDataa);
+
+        const filePath = uploadResponse.data.files[0].url;
+        const fileUrl = filePath.split('/').pop();
+
+        const projectData = {
+          ...formData,
+          fileUrl: fileUrl
+        };
+
+        await axiosInstance.post('/addprojects/addproject', projectData);
+
+        toast.success('Project added successfully');
+        handleCloseDialog();
+        fetchProjects();
+      } catch (error) {
+        console.error('Error uploading file or adding project:', error);
+        toast.error('Error adding project');
+      }
     }
   };
 
@@ -167,6 +186,8 @@ const AddProject = () => {
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [currentProject, setCurrentProject] = useState(null);
 
+  const basePath = 'https://propertymanager.cloudpress.host/api/images/get-file/';
+
   const handleOpenEditDialog = (projectId) => {
     const projectToEdit = projects.find((project) => project.project_id === projectId);
     if (projectToEdit) {
@@ -177,7 +198,9 @@ const AddProject = () => {
         priority: projectToEdit.priority,
         description: projectToEdit.description,
         startDate: projectToEdit.startDate,
-        endDate: projectToEdit.endDate
+        endDate: projectToEdit.endDate,
+        // Assuming you want to display the file name in the edit form
+        fileUrl: projectToEdit.fileUrl ? `${basePath}${projectToEdit.fileUrl}` : ''
       });
       setSelectedProjectId(projectId);
       setOpenEditDialog(true);
@@ -204,7 +227,7 @@ const AddProject = () => {
     try {
       await axiosInstance.put(`/addprojects/editproject/${currentProject.project_id}`, formData);
       toast.success('Project updated successfully');
-      handleCloseEditDialog();
+      handleCloseEditDialog();  
       fetchProjects();
     } catch (error) {
       console.error('Error updating project:', error);
@@ -280,13 +303,10 @@ const AddProject = () => {
         )
       ]);
 
-      // After successful update, send notifications
-      // For added users
       usersToAdd.forEach((userId) => {
         sendNotification(userId, 'add', selectedProjectId);
       });
 
-      // For removed users
       usersToRemove.forEach((userId) => {
         sendNotification(userId, 'remove', selectedProjectId);
       });
@@ -339,7 +359,7 @@ const AddProject = () => {
 
       const currentDate = new Date();
       currentDate.setHours(0, 0, 0, 0);
-
+      
       const filteredProjects = projects
         .map((project) => {
           const filteredUsers = project.users
@@ -371,26 +391,34 @@ const AddProject = () => {
         excelData.push({
           'Project Name': project.projectName,
           Username: '',
+          Task: '',
           Field: '',
-          Value: ''
+          Value: '',
+          'Creation Date': ''
         });
 
         project.users.forEach((user) => {
           excelData.push({
             'Project Name': '',
             Username: `${user.firstName} ${user.lastName}`,
+            Task: '',
             Field: '',
-            Value: ''
+            Value: '',
+            'Creation Date': ''
           });
 
           user.tasks.forEach((task) => {
-            Object.entries(task.formFields).forEach(([field, value]) => {
+            const creationDate = new Date(task.createAt).toISOString().split('T')[0];
+
+            Object.entries(task.formFields).forEach(([field, value], index) => {
               let fieldValue = Array.isArray(value) ? value.join(', ') : value;
               excelData.push({
                 'Project Name': '',
                 Username: '',
+                Task: task.taskId ? `Task ${index + 1}` : '',
                 Field: field,
-                Value: fieldValue
+                Value: fieldValue,
+                'Creation Date': index === 0 ? creationDate : ''
               });
             });
           });
@@ -421,7 +449,16 @@ const AddProject = () => {
       console.error('Error downloading the report:', error);
     }
   };
-  
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileName, setFileName] = useState('No file selected');
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setFileName(file.name);
+    }
+  };
+
   return (
     <>
       {loading && (
@@ -562,6 +599,32 @@ const AddProject = () => {
                         InputLabelProps={{ shrink: true }}
                       />
                     </Grid>
+                    <Grid item xs={12}>
+                      <label
+                        htmlFor="file-upload"
+                        style={{
+                          display: 'inline-block',
+                          padding: '5px 10px',
+                          cursor: 'pointer',
+                          backgroundColor: 'rgba(71, 121, 126, 1)',
+                          color: 'white',
+                          borderRadius: '5px',
+                          fontFamily: 'Arial, sans-serif',
+                          fontSize: '16px',
+                          transition: 'background-color 0.3s',
+                          border: 'none',
+                          boxShadow: '0px 2px 5px rgba(0,0,0,0.2)'
+                        }}
+                      >
+                        Upload File
+                        <input id="file-upload" type="file" onChange={handleFileChange} style={{ display: 'none' }} />
+                      </label>
+                    </Grid>
+                    {selectedFile && (
+                      <Grid item xs={12} style={{ marginTop: '10px' }}>
+                        <div>Selected file: {fileName}</div>
+                      </Grid>
+                    )}
                   </Grid>
                 </form>
               </DialogContent>
@@ -610,7 +673,7 @@ const AddProject = () => {
 
                           <MenuItem
                             onClick={() => {
-                              handleOpenUserAssignmentDialog(selectedProjectId); // And he
+                              handleOpenUserAssignmentDialog(selectedProjectId);
                               handleMenuClose();
                             }}
                           >
@@ -619,7 +682,7 @@ const AddProject = () => {
 
                           <MenuItem
                             onClick={() => {
-                              handleOpenDeleteDialog(selectedProjectId); // And he
+                              handleOpenDeleteDialog(selectedProjectId);
                               handleMenuClose();
                             }}
                           >
@@ -797,6 +860,48 @@ const AddProject = () => {
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                   />
+                </Grid>
+                <Grid item xs={12} style={{ margin: '20px 0' }}>
+                  {formData.fileUrl && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        background: '#f5f5f5',
+                        padding: '10px',
+                        borderRadius: '5px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      <Typography variant="body1" style={{ margin: 0, fontWeight: 'bold', color: '#555' }}>
+                        Current File:
+                      </Typography>
+                      <button
+                        onClick={() => {
+                          const filename = formData.fileUrl.split('/').pop();
+                          const fullFilePath = `${basePath}${filename}`;
+                          console.log(fullFilePath, 'blank');
+                          window.open(fullFilePath, '_blank');
+                        }}
+                        style={{
+                          textDecoration: 'none',
+                          color: '#0077b5',
+                          backgroundColor: '#eef6fc',
+                          padding: '5px 15px',
+                          borderRadius: '15px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          marginLeft: '10px',
+                          fontWeight: 'bold',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        }}
+                        type="button"
+                      >
+                        {formData.fileUrl.split('/').pop()}
+                      </button>
+                    </div>
+                  )}
                 </Grid>
               </Grid>
             </Box>

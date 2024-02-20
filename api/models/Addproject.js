@@ -12,6 +12,9 @@ const ProjectSchema = new mongoose.Schema({
   projectName: {
     type: String
   },
+  fileUrl: {
+    type: String
+  },
   projectShortName: {
     type: String
   },

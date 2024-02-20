@@ -26,8 +26,8 @@ import { motion } from 'framer-motion';
 
 const NotificationBadge = styled(Badge)(({ theme }) => ({
   '& .MuiBadge-badge': {
-    backgroundColor: theme.palette.error.main,
-    color: theme.palette.getContrastText(theme.palette.error.main)
+    backgroundColor: theme.palette.secondary.main,
+    color: theme.palette.getContrastText(theme.palette.secondary.main)
   }
 }));
 
@@ -81,37 +81,44 @@ const Notification = () => {
       console.error('Error deleting notification:', error);
     }
   };
+
   const checkVariants = {
     hover: { scale: 1.2 },
     tap: { scale: 0.8 }
   };
+
   return (
     <Box sx={{ flexShrink: 0, ml: 0.75 }}>
       <IconButton ref={anchorRef} onClick={handleToggle} color="inherit">
-        <NotificationBadge badgeContent={notifications.length} color="error">
+        <NotificationBadge badgeContent={notifications.length} color="secondary">
           <NotificationsIcon />
         </NotificationBadge>
       </IconButton>
       <Popper open={open} anchorEl={anchorRef.current} transition disablePortal>
         {({ TransitionProps }) => (
           <Grow {...TransitionProps}>
-            <Paper elevation={4} sx={{ minWidth: 350, bgcolor: 'background.paper' }}>
+            <Paper elevation={4} sx={{ minWidth: 350, bgcolor: 'background.paper', overflow: 'hidden' }}>
               <ClickAwayListener onClickAway={handleClose}>
                 {notifications.length > 0 ? (
-                  <List>
+                  <List sx={{ padding: 0 }}>
                     {notifications.map((notification, index) => (
                       <React.Fragment key={index}>
-                        <ListItem alignItems="flex-start" sx={{ py: 1 }}>
+                        <ListItem
+                          alignItems="flex-start"
+                          sx={{ py: 1, px: 2, backgroundColor: index % 2 ? theme.palette.action.hover : 'inherit' }}
+                        >
                           <ListItemIcon>
-                            <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
+                            <Avatar sx={{ bgcolor: theme.palette.primary.light, mr: 1 }}>
                               <ReportIcon />
                             </Avatar>
                           </ListItemIcon>
                           <ListItemText
                             primary={`${notification.userDetails.firstname} ${notification.userDetails.lastname}`}
+                            primaryTypographyProps={{ fontWeight: 'bold', color: theme.palette.primary.dark }}
+                            secondaryTypographyProps={{ component: 'div' }}
                             secondary={
-                              <React.Fragment>
-                                <Typography component="span" variant="body2" color="text.primary" sx={{ display: 'block' }}>
+                              <>
+                                <Typography component="span" variant="body2" color="text.primary">
                                   Added a report in {notification.formDetails.formName}
                                 </Typography>
                                 <Typography
@@ -121,29 +128,24 @@ const Notification = () => {
                                 >
                                   For {notification.projectDetails.projectName} project
                                 </Typography>
-                              </React.Fragment>
+                              </>
                             }
                           />
                           <ListItemButton sx={{ justifyContent: 'flex-end', bgcolor: 'transparent' }}>
                             <motion.div whileHover="hover" whileTap="tap" variants={checkVariants}>
-                              <IconButton
-                                onClick={() => deleteNotification(notification.notification_id)}
-                                size="large"
-                                sx={{ color: 'success.main' }}
-                              >
-                                <CheckCircleIcon sx={{ fontSize: 20 }} />
+                              <IconButton onClick={() => deleteNotification(notification.notification_id)} size="large">
+                                <CheckCircleIcon sx={{ color: theme.palette.success.main, fontSize: 20 }} />
                               </IconButton>
                             </motion.div>
                           </ListItemButton>
                         </ListItem>
-
                         {index < notifications.length - 1 && <Divider variant="inset" component="li" />}
                       </React.Fragment>
                     ))}
                   </List>
                 ) : (
                   <ListItem sx={{ py: 4, justifyContent: 'center' }}>
-                    <ListItemText primary="No new notifications" primaryTypographyProps={{ variant: 'subtitle1' }} />
+                    <ListItemText primary="No new notifications" primaryTypographyProps={{ variant: 'subtitle1', textAlign: 'center' }} />
                   </ListItem>
                 )}
               </ClickAwayListener>

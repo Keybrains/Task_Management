@@ -16,8 +16,12 @@ import {
   Typography,
   Grow,
   useTheme,
-  ListItemButton
+  ListItemButton,
+  Button
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { CloseOutlined } from '@ant-design/icons';
+import MainCard from 'user/components/UserMainCard';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import ReportIcon from '@mui/icons-material/DescriptionOutlined';
 import { styled } from '@mui/material/styles';
@@ -33,6 +37,7 @@ const NotificationBadge = styled(Badge)(({ theme }) => ({
 
 const Notification = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const anchorRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -99,55 +104,76 @@ const Notification = () => {
           <Grow {...TransitionProps}>
             <Paper elevation={4} sx={{ minWidth: 350, bgcolor: 'background.paper', overflow: 'hidden' }}>
               <ClickAwayListener onClickAway={handleClose}>
-                {notifications.length > 0 ? (
-                  <List sx={{ padding: 0 }}>
-                    {notifications.map((notification, index) => (
-                      <React.Fragment key={index}>
-                        <ListItem
-                          alignItems="flex-start"
-                          sx={{ py: 1, px: 2, backgroundColor: index % 2 ? theme.palette.action.hover : 'inherit' }}
-                        >
-                          <ListItemIcon>
-                            <Avatar sx={{ bgcolor: theme.palette.primary.light, mr: 1 }}>
-                              <ReportIcon />
-                            </Avatar>
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={`${notification.userDetails.firstname} ${notification.userDetails.lastname}`}
-                            primaryTypographyProps={{ fontWeight: 'bold', color: theme.palette.primary.dark }}
-                            secondaryTypographyProps={{ component: 'div' }}
-                            secondary={
-                              <>
-                                <Typography component="span" variant="body2" color="text.primary">
-                                  Added a report in {notification.formDetails.formName}
-                                </Typography>
-                                <Typography
-                                  component="span"
-                                  variant="caption"
-                                  sx={{ display: 'block', color: theme.palette.text.secondary }}
-                                >
-                                  For {notification.projectDetails.projectName} project
-                                </Typography>
-                              </>
-                            }
-                          />
-                          <ListItemButton sx={{ justifyContent: 'flex-end', bgcolor: 'transparent' }}>
-                            <motion.div whileHover="hover" whileTap="tap" variants={checkVariants}>
-                              <IconButton onClick={() => deleteNotification(notification.notification_id)} size="large">
-                                <CheckCircleIcon sx={{ color: theme.palette.success.main, fontSize: 20 }} />
-                              </IconButton>
-                            </motion.div>
-                          </ListItemButton>
-                        </ListItem>
-                        {index < notifications.length - 1 && <Divider variant="inset" component="li" />}
-                      </React.Fragment>
-                    ))}
-                  </List>
-                ) : (
-                  <ListItem sx={{ py: 4, justifyContent: 'center' }}>
-                    <ListItemText primary="No new notifications" primaryTypographyProps={{ variant: 'subtitle1', textAlign: 'center' }} />
-                  </ListItem>
-                )}
+                <MainCard
+                  title="Notification"
+                  secondary={
+                    <>
+                      <IconButton size="small" onClick={handleToggle}>
+                        <CloseOutlined />
+                      </IconButton>
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          navigate('/admin/alladminnotification');
+                          handleClose(event);
+                        }}
+                        sx={{ ml: 1 }}
+                      >
+                        View All
+                      </Button>
+                    </>
+                  }
+                >
+                  {notifications.length > 0 ? (
+                    <List sx={{ padding: 0 }}>
+                      {notifications.map((notification, index) => (
+                        <React.Fragment key={index}>
+                          <ListItem
+                            alignItems="flex-start"
+                            sx={{ py: 1, px: 2, backgroundColor: index % 2 ? theme.palette.action.hover : 'inherit' }}
+                          >
+                            <ListItemIcon>
+                              <Avatar sx={{ bgcolor: theme.palette.primary.light, mr: 1 }}>
+                                <ReportIcon />
+                              </Avatar>
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={`${notification.userDetails.firstname} ${notification.userDetails.lastname}`}
+                              primaryTypographyProps={{ fontWeight: 'bold', color: theme.palette.primary.dark }}
+                              secondaryTypographyProps={{ component: 'div' }}
+                              secondary={
+                                <>
+                                  <Typography component="span" variant="body2" color="text.primary">
+                                    Added a report in {notification.formDetails.formName}
+                                  </Typography>
+                                  <Typography
+                                    component="span"
+                                    variant="caption"
+                                    sx={{ display: 'block', color: theme.palette.text.secondary }}
+                                  >
+                                    For {notification.projectDetails.projectName} project
+                                  </Typography>
+                                </>
+                              }
+                            />
+                            <ListItemButton sx={{ justifyContent: 'flex-end', bgcolor: 'transparent' }}>
+                              <motion.div whileHover="hover" whileTap="tap" variants={checkVariants}>
+                                <IconButton onClick={() => deleteNotification(notification.notification_id)} size="large">
+                                  <CheckCircleIcon sx={{ color: theme.palette.success.main, fontSize: 20 }} />
+                                </IconButton>
+                              </motion.div>
+                            </ListItemButton>
+                          </ListItem>
+                          {index < notifications.length - 1 && <Divider variant="inset" component="li" />}
+                        </React.Fragment>
+                      ))}
+                    </List>
+                  ) : (
+                    <ListItem sx={{ py: 4, justifyContent: 'center' }}>
+                      <ListItemText primary="No new notifications" primaryTypographyProps={{ variant: 'subtitle1', textAlign: 'center' }} />
+                    </ListItem>
+                  )}
+                </MainCard>
               </ClickAwayListener>
             </Paper>
           </Grow>

@@ -9,6 +9,7 @@ import AddUser from 'team/AddUser';
 import AddForm from 'form/AddForm';
 import Reports from 'report/Reports';
 import EditForm from 'form/EditFrom';
+import AdminAllNotification from 'layout/MainLayout/Header/HeaderContent/AdminAllNotification';
 
 
 // render - dashboard
@@ -86,7 +87,10 @@ const AdminMainRoutes = {
       path: 'reports',
       element: <Reports />
     },
-  
+    {
+      path: 'alladminnotification',
+      element: <AdminAllNotification />
+    },
   ]
 };
 

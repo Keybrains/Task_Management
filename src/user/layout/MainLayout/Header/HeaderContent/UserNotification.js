@@ -15,8 +15,10 @@ import {
   Popper,
   Typography,
   useMediaQuery,
-  ListItem
+  ListItem,
+  Button
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../../../config/AxiosInstanceUser';
 import MainCard from 'user/components/UserMainCard';
 import Transitions from 'components/@extended/Transitions';
@@ -28,6 +30,7 @@ import { motion } from 'framer-motion';
 
 const UserNotification = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const decodedToken = localStorage.getItem('decodedToken');
   const parsedToken = JSON.parse(decodedToken);
   const loggedInUserId = parsedToken.userId?.user_id;
@@ -47,7 +50,7 @@ const UserNotification = () => {
     }
     setOpen(false);
   };
-
+  
   useEffect(() => {
     const fetchFormNotifications = async () => {
       try {
@@ -139,9 +142,21 @@ const UserNotification = () => {
                   <MainCard
                     title="Notification"
                     secondary={
-                      <IconButton size="small" onClick={handleToggle}>
-                        <CloseOutlined />
-                      </IconButton>
+                      <>
+                        <IconButton size="small" onClick={handleToggle}>
+                          <CloseOutlined />
+                        </IconButton>
+                        <Button
+                          size="small"
+                          onClick={() => {
+                            navigate('/user/allnotification');
+                            handleClose(event);
+                          }}
+                          sx={{ ml: 1 }}
+                        >
+                          View All
+                        </Button>
+                      </>
                     }
                   >
                     {notifications.length > 0 ? (

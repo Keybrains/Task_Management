@@ -6,6 +6,7 @@ import UserMainLayout from 'user/layout/MainLayout/UserMainLayout';
 import RequireAuth from 'RequireAuth';
 import AddTask from 'user/task/AddTask';
 import AllProjects from 'user/projects/AllProjects';
+import UserAllNotification from 'user/layout/MainLayout/Header/HeaderContent/UserAllNotification';
 
 // render - dashboard
 const DashboardDefault = Loadable(lazy(() => import('user/pages/dashboard/UserDashboardDefault')));
@@ -62,6 +63,10 @@ const UserMainRoutes = {
     {
       path: 'allproject',
       element: <AllProjects />
+    },
+    {
+      path: 'allnotification',
+      element: <UserAllNotification />
     },
   ]
 };

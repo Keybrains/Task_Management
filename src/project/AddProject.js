@@ -227,7 +227,7 @@ const AddProject = () => {
     try {
       await axiosInstance.put(`/addprojects/editproject/${currentProject.project_id}`, formData);
       toast.success('Project updated successfully');
-      handleCloseEditDialog();  
+      handleCloseEditDialog();
       fetchProjects();
     } catch (error) {
       console.error('Error updating project:', error);
@@ -359,7 +359,7 @@ const AddProject = () => {
 
       const currentDate = new Date();
       currentDate.setHours(0, 0, 0, 0);
-      
+
       const filteredProjects = projects
         .map((project) => {
           const filteredUsers = project.users

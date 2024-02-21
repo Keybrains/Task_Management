@@ -73,7 +73,7 @@ const Breadcrumbs = ({ navigation }) => {
     // main
     if (item.breadcrumbs !== false) {
       breadcrumbContent = (
-        <Grid container direction="column" justifyContent="flex-start" alignItems="flex-start" spacing={1}>
+        <Grid container direction="column" justifyContent="flex-start" alignItems="flex-start" spacing={1} sx={{ mt: 0.5, pt: 0.5 }}>
           <Grid item>
             <MuiBreadcrumbs aria-label="breadcrumb">
               <Typography component={Link} to="/" color="textSecondary" variant="h6" sx={{ textDecoration: 'none' }}>
